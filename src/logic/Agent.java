@@ -326,6 +326,7 @@ public class Agent {
 				// If its not a floor space or water, it must be interesting.
 				switch (local_map[y][x]) {
 				case 'T':
+					// If we have a tree, it's more interesting if we have an axe.
 					if (inventory.get('a') > 0) {
 						points.add(new Position(x, y, posx, posy, 70));
 					} else {

@@ -30,11 +30,11 @@ public class Agent {
 	private char last_view[][]; // last view received by server
 	
 	// Size of the local map (i.e. how far the agent can explore)
-	private static final int LOCAL_MAP_SIZE = 160;
+	public static final int LOCAL_MAP_SIZE = 160;
 
 	// Width and height of view we get from server
-	private static final int VIEW_SIZE = 5; 
-	private static final int VIEW_HALF_SIZE = 2; 
+	public static final int VIEW_SIZE = 5; 
+	public static final int VIEW_HALF_SIZE = 2; 
 	// Agent initially starts here
 	private static final int START_X = LOCAL_MAP_SIZE / 2;
 	private static final int START_Y = LOCAL_MAP_SIZE / 2;
@@ -43,6 +43,8 @@ public class Agent {
 	private int initx, inity; // initial x, y (to return here)
 	private int minx, miny, maxx, maxy; // maximally explored area (for
 										// debugging output)
+	
+	private int turnNumber; 
 
 	// Inventory represented by map.
 	private Map<Character, Integer> inventory = new HashMap<Character, Integer>();
@@ -81,6 +83,8 @@ public class Agent {
 		initx = posx;
 		inity = posy;
 		
+		turnNumber = 0;
+		
 		// Populate inventory.
 		inventory.put('d', 0);
 		inventory.put('k', 0);
@@ -96,7 +100,7 @@ public class Agent {
 	// signal to all views to refresh
 	public void updateViews() {
 		for (IAgentView v : views) {
-			v.onUpdate();
+			v.onUpdate(posx, posy);
 		}
 	}
 
@@ -151,6 +155,10 @@ public class Agent {
 	// Get the character at the given position
 	public char charAt(int x, int y) {
 		return local_map[y][x];
+	}
+	
+	public int getTurnNumber() {
+		return turnNumber;
 	}
 	
 	/** returns whether a block can be moved into **/
@@ -391,14 +399,13 @@ public class Agent {
 		}
 
 		// attach a view to the agent
-		IAgentView agentView;
+		IAgentView agentView = null;
 		
-		if (args.length >= 2 && args[2].equals("-gui")) {
-			agentView = new AgentGUIView();
+		if (args.length >= 3 && args[2].equals("-gui")) {
+			agentView = new AgentGUIView(agent);
 		} else {
-			agentView = new AgentConsoleView();
+			agentView = new AgentConsoleView(agent);
 		}
-		agentView.setAgent(agent);
 		
 		try { // scan 5-by-5 wintow around current location
 			while (true) {

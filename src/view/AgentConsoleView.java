@@ -6,12 +6,14 @@ public class AgentConsoleView implements IAgentView {
 
 	private Agent agent;
 	
-	public AgentConsoleView() {
+	public AgentConsoleView(Agent agent) {
+		this.agent = agent;
 		
+		agent.addView(this);
 	}
 	
 	@Override
-	public void onUpdate() {
+	public void onUpdate(int posx, int posy) {
 		print_view();
 		System.out.println(getExploredArea());
 	}

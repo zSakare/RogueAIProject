@@ -73,6 +73,10 @@ public class Position implements Comparable<Position> {
 		return (int) Math.sqrt((currX - x)^2 + (currY - y)^2);
 	}
 	
+	public Integer getCost() {
+		return (int) getAbsoluteDistance() - getReward();
+	}
+	
 	/**
 	 * Comparison function for priority queue.
 	 * 
@@ -82,7 +86,7 @@ public class Position implements Comparable<Position> {
 	public int compareTo(Position o) {
 		if (o != null) {
 			Position position = (Position) o;
-			return this.getAbsoluteDistance().compareTo(position.getAbsoluteDistance());
+			return this.getCost().compareTo(position.getCost());
 		}
 		
 		return 0;

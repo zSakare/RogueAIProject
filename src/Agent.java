@@ -286,11 +286,23 @@ public class Agent {
 				// If its not a floor space or water, it must be interesting.
 				switch (local_map[x][y]) {
 				case 'T':
-					points.add(new Position(x, y, posx, posy, 20));
+					if (inventory.get('a') > 0) {
+						points.add(new Position(x, y, posx, posy, 70));
+					} else {
+						points.add(new Position(x, y, posx, posy, 20));
+					}
 				case '*':
-					points.add(new Position(x, y, posx, posy, 20));
+					if (inventory.get('d') > 0) {
+						points.add(new Position(x, y, posx, posy, 70));
+					} else {
+						points.add(new Position(x, y, posx, posy, 20));
+					}
 				case 'd':
-					points.add(new Position(x, y, posx, posy, 50));
+					if (inventory.get('k') > 0) {
+						points.add(new Position(x, y, posx, posy, 70));
+					} else {
+						points.add(new Position(x, y, posx, posy, 0));
+					}
 				case 'g':
 					points.add(new Position(x, y, posx, posy, 100));
 				case 'a':
@@ -299,6 +311,8 @@ public class Agent {
 					points.add(new Position(x, y, posx, posy, 50));
 				case 'x':
 					points.add(new Position(x, y, posx, posy, 20));
+				case '~':
+					points.add(new Position(x, y, posx, posy, -100));
 				}
 			}
 		}

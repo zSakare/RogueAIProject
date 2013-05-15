@@ -21,7 +21,7 @@ public class AgentGUIView implements IAgentView {
 	JButton btnExit;
 	
 	public AgentGUIView() {
-		panel = new JPanel(null);
+		panel = new JPanel(new GridBagLayout());
 		panel.setPreferredSize(new Dimension(800, 600));
 		
 		btnExit = new JButton("Exit");

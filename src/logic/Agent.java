@@ -9,17 +9,20 @@ package logic;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Array;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
+import java.util.Set;
 
-import view.*;
-import model.*;
+import model.Position;
+import view.AgentConsoleView;
+import view.AgentGUIView;
+import view.IAgentView;
 
 public class Agent {
 
@@ -307,66 +310,186 @@ public class Agent {
 		return (char) ch;
 	}
 
-	private int searchAStar() {
+	private List<Position> searchAStar() {
 		PriorityQueue<Position> queue = new PriorityQueue<Position>();
-		// Find interesting points (scan map) and put into PriQ.
-		List<Position> pointsOfInterest = findPOI();
+		Set<Position> explored = new HashSet<Position>();
 		
-		// Add all the points of interest in.
-		queue.addAll(pointsOfInterest);
+		// Remember each position's successor.
+		Map<Position, Position> cameFrom = new HashMap<Position, Position>();
+		
+		// Find interesting point (scan map) and put into PriQ.
+		Position goal = findPOI();
+		
+		// Add the current position.
+		queue.add(new Position(goal.getX(), goal.getY(), posx, posy, 10));
+		
+		// Mark the initial scores.
+		Map<Position, Integer> cost = new HashMap<Position, Integer>();
+		// Predicted cost.
+		Map<Position, Integer> fCost = new HashMap<Position, Integer>();
+		
+		cost.put(queue.peek(), 0);
+		fCost.put(queue.peek(), (cost.get(queue.peek()) + queue.peek().getCost()));
 		
 		// A star!
 		while (!queue.isEmpty()) {
+			// Take the top element
+			Position current = queue.peek();
+			if (current.equals(goal)) {
+				// Save the current state, finish the loop.
+				return pathFind(cameFrom, current);
+			}
 			
-		}
-		
-		// Return the next move to take.
-		return 0;
-	}
-
-	private List<Position> findPOI() {
-		// all points of interest to return.
-		List<Position> points = new ArrayList<Position>();
-		
-		// Brute force search for interesting points.
-		for (int y = 0; y < LOCAL_MAP_SIZE; y++) {
-			for (int x = 0; x < LOCAL_MAP_SIZE; x++) {
-				// If its not a floor space or water, it must be interesting.
-				switch (local_map[y][x]) {
-				case 'T':
-					// If we have a tree, it's more interesting if we have an axe.
-					if (inventory.get('a') > 0) {
-						points.add(new Position(x, y, posx, posy, 70));
-					} else {
-						points.add(new Position(x, y, posx, posy, 20));
+			// Remove the element from the queue and add it to our explored set.
+			explored.add(queue.remove());
+			
+			// Get all possible next moves.
+			List<Position> neighbours = getLegalNeighbours(current);
+			
+			// Iterate through all next possible moves, find new, unexplored moves to explore.
+			for (Position neighbour : neighbours) {
+				int potentialCost = cost.get(current) + neighbour.absoluteDistanceFrom(current);
+				if (explored.contains(neighbour)) {
+					if (potentialCost >= cost.get(neighbour)) {
+						// ignore the neighbour since we've already explored it from another path
+						// and the new path to the neighbour isn't any better.
 					}
-				case '*':
-					if (inventory.get('d') > 0) {
-						points.add(new Position(x, y, posx, posy, 70));
-					} else {
-						points.add(new Position(x, y, posx, posy, 20));
+				} else if (!queue.contains(neighbour) || potentialCost < cost.get(neighbour)) {
+					// Map where we came from (to pathfind).
+					cameFrom.put(neighbour, current);
+					// Update costs.
+					cost.put(neighbour, potentialCost);
+					fCost.put(neighbour, neighbour.getCost());
+					if (!queue.contains(neighbour)) {
+						queue.add(neighbour);
 					}
-				case 'd':
-					if (inventory.get('k') > 0) {
-						points.add(new Position(x, y, posx, posy, 70));
-					} else {
-						points.add(new Position(x, y, posx, posy, 0));
-					}
-				case 'g':
-					points.add(new Position(x, y, posx, posy, 100));
-				case 'a':
-					points.add(new Position(x, y, posx, posy, 50));
-				case 'k':
-					points.add(new Position(x, y, posx, posy, 50));
-				case 'x':
-					points.add(new Position(x, y, posx, posy, 20));
-				case '~':
-					points.add(new Position(x, y, posx, posy, -100));
 				}
 			}
 		}
 		
-		return points;
+		// We haven't found a viable path to take.
+		return null;
+	}
+
+	/**
+	 * Helper function to return a list of legal positions to move into.
+	 * 
+	 * @param current - current position to check from.
+	 * @return - list of legal positions
+	 */
+	private List<Position> getLegalNeighbours(Position current) {
+		// List of legal positions.
+		List<Position> legalPositions = new ArrayList<Position>();
+		
+		// Checking we do not go out of bounds.
+		if (current.getCurrX() != 0) {
+			if (canMoveInto(local_map[current.getCurrY()][current.getCurrX()-1])) {
+				legalPositions.add(new Position(current.getX(), current.getY(), current.getCurrX()-1, current.getCurrY(), current.getReward()));
+			}
+		} else if (current.getCurrX() != LOCAL_MAP_SIZE-1) {
+			if (canMoveInto(local_map[current.getCurrY()][current.getCurrX()+1])) {
+				legalPositions.add(new Position(current.getX(), current.getY(), current.getCurrX()+1, current.getCurrY(), current.getReward()));
+			}
+		}
+		
+		// Checking we do not go out of bounds.
+		if (current.getCurrY() != 0) {
+			if (canMoveInto(local_map[current.getCurrY()-1][current.getCurrX()])) {
+				legalPositions.add(new Position(current.getX(), current.getY(), current.getCurrX(), current.getCurrY()-1, current.getReward()));
+			}
+		} else if (current.getCurrY() != LOCAL_MAP_SIZE-1) {
+			if (canMoveInto(local_map[current.getCurrY()+1][current.getCurrX()])) {
+				legalPositions.add(new Position(current.getX(), current.getY(), current.getCurrX(), current.getCurrY()+1, current.getReward()));
+			}
+		}
+		
+		return null;
+	}
+
+	/**
+	 * Helper function that recursively finds the path taken by the nodes.
+	 * 
+	 * @param cameFrom - Map of child positions to parent positions
+	 * @param current - current position to back track
+	 * @return - the path taken to reach goal.
+	 */
+	private List<Position> pathFind(Map<Position, Position> cameFrom, Position current) {
+		if (cameFrom.containsKey(current)) {
+			List<Position> pathToTake = pathFind(cameFrom, cameFrom.get(current));
+			pathToTake.add(current);
+			return pathToTake;
+		} else {
+			List<Position> pathToTake = new ArrayList<Position>();
+			pathToTake.add(current);
+			return pathToTake;
+		}
+	}
+
+	/**
+	 * Helper function that finds the most interesting point on the map.
+	 * 
+	 * @return - an interesting point.
+	 */
+	private Position findPOI() {
+		// all points of interest to return.
+		Position point = null;
+		
+		if (inventory.get('g') > 0) {
+			// We have gold, add interest to returning to starting position.
+			point = new Position(START_X, START_Y, START_X, START_Y, 100);
+		} else {
+			// Brute force search for interesting points.
+			for (int y = 0; y < LOCAL_MAP_SIZE; y++) {
+				for (int x = 0; x < LOCAL_MAP_SIZE; x++) {
+					if (point == null) {
+						switch (local_map[y][x]) {
+						case 'T':
+							// If we have a tree, it's more interesting if we have an axe.
+							if (inventory.get('a') > 0) {
+								point = new Position(x, y, x, y, 70);
+							} else {
+								point = new Position(x, y, x, y, 20);
+							}
+							break;
+						case '*':
+							if (inventory.get('d') > 0) {
+								point = new Position(x, y, x, y, 70);
+							} else {
+								point = new Position(x, y, x, y, 20);
+							}
+							break;
+						case 'd':
+							if (inventory.get('k') > 0) {
+								point = new Position(x, y, x, y, 70);
+							} else {
+								point = new Position(x, y, x, y, 10);
+							}
+							break;
+						case 'g':
+							point = new Position(x, y, x, y, 100);
+							break;
+						case 'a':
+							point = new Position(x, y, x, y, 50);
+							break;
+						case 'k':
+							point = new Position(x, y, x, y, 50);
+							break;
+						case 'x':
+							point = new Position(x, y, x, y, 20);
+							break;
+						case '~':
+							point = new Position(x, y, x, y, 0);
+							break;
+						case ' ':
+							point = new Position(x, y, x, y, 10);
+							break;
+						}
+					}
+				}
+			}
+		}
+		
+		return point;
 	}
 
 	public static void main(String[] args) {

@@ -1,4 +1,6 @@
 package model;
+
+
 /**
  * Class to represent a single point on the map.
  */
@@ -91,5 +93,28 @@ public class Position implements Comparable<Position> {
 		}
 		
 		return 0;
+	}
+	
+	/**
+	 * Object equals function.
+	 */
+	public boolean equals(Object o) {
+		boolean equal = false;
+		
+		if (o != null) {
+			Position position = (Position) o;
+			if (position.x == this.x 
+					&& position.y == this.y
+					&& position.currX == this.currX
+					&& position.currY == this.currY) {
+				equal = true;
+			}
+		}
+		
+		return equal;
+	}
+
+	public Integer absoluteDistanceFrom(Position positionFrom) {
+		return (int) Math.sqrt((this.x - positionFrom.x)^2 + (this.y - positionFrom.y)^2);
 	}
 }

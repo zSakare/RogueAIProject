@@ -5,9 +5,13 @@
 /*  UNSW Session 1, 2013
  */
 
-import java.util.*;
-import java.io.*;
-import java.net.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.PriorityQueue;
 
 public class Agent {
 
@@ -206,9 +210,12 @@ public class Agent {
 
 	
 	public char get_action(char view[][]) {
-
+		
+		// Perform a search and pick best next move.
+		int ch = searchAStar();
+		
 		// REPLACE THIS CODE WITH AI TO CHOOSE ACTION
-
+		/**
 		int ch = 0;
 
 		System.out.print("Enter Action(s): ");
@@ -237,8 +244,55 @@ public class Agent {
 		} catch (IOException e) {
 			System.out.println("IO error:" + e);
 		}
+		**/
+		return (char) ch;
+	}
 
+	private int searchAStar() {
+		PriorityQueue<Position> queue = new PriorityQueue<Position>();
+		// Find interesting points (scan map) and put into PriQ.
+		List<Position> pointsOfInterest = findPOI();
+		
+		// Add all the points of interest in.
+		queue.addAll(pointsOfInterest);
+		
+		// A star!
+		while (!queue.isEmpty()) {
+			
+		}
+		
+		// Return the next move to take.
 		return 0;
+	}
+
+	private List<Position> findPOI() {
+		// all points of interest to return.
+		List<Position> points = new ArrayList<Position>();
+		
+		// Brute force search for interesting points.
+		for (int x = 0; x < LOCAL_MAP_SIZE; x++) {
+			for (int y = 0; y < LOCAL_MAP_SIZE; y++) {
+				// If its not a floor space or water, it must be interesting.
+				switch (local_map[x][y]) {
+				case 'T':
+					points.add(new Position(x, y, posx, posy, 20));
+				case '*':
+					points.add(new Position(x, y, posx, posy, 20));
+				case 'd':
+					points.add(new Position(x, y, posx, posy, 50));
+				case 'g':
+					points.add(new Position(x, y, posx, posy, 100));
+				case 'a':
+					points.add(new Position(x, y, posx, posy, 50));
+				case 'k':
+					points.add(new Position(x, y, posx, posy, 50));
+				case 'x':
+					points.add(new Position(x, y, posx, posy, 20));
+				}
+			}
+		}
+		
+		return points;
 	}
 
 	void print_view(char view[][], boolean show_arrow) {

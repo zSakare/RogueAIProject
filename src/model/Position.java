@@ -73,7 +73,7 @@ public class Position implements Comparable<Position> {
 	 * @return - the absolute distance.
 	 */
 	public Integer getAbsoluteDistance() {
-		return (int) Math.sqrt((currX - x)^2 + (currY - y)^2);
+		return (int) Math.sqrt(Math.pow((currX - x), 2) + Math.pow((currY - y), 2));
 	}
 	
 	public Integer getCost() {
@@ -115,6 +115,6 @@ public class Position implements Comparable<Position> {
 	}
 
 	public Integer absoluteDistanceFrom(Position positionFrom) {
-		return (int) Math.sqrt((this.x - positionFrom.x)^2 + (this.y - positionFrom.y)^2);
+		return (int) Math.sqrt(Math.pow(this.x - positionFrom.x, 2) + Math.pow(this.y - positionFrom.y, 2));
 	}
 }

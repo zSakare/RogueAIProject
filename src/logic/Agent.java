@@ -274,7 +274,12 @@ public class Agent {
 	public char get_action(char view[][]) {
 		
 		// Perform a search and pick best next move.
-		//int ch = searchAStar();
+		List<Position> path = searchAStar();
+		
+		// TODO: Remove debug prints later.
+		for (Position step : path) {
+			System.out.println("Move: (" + step.getCurrX() + "," + step.getCurrY() + ").");
+		}
 		
 		// REPLACE THIS CODE WITH AI TO CHOOSE ACTION
 		
@@ -347,21 +352,28 @@ public class Agent {
 			List<Position> neighbours = getLegalNeighbours(current);
 			
 			// Iterate through all next possible moves, find new, unexplored moves to explore.
-			for (Position neighbour : neighbours) {
-				int potentialCost = cost.get(current) + neighbour.absoluteDistanceFrom(current);
-				if (explored.contains(neighbour)) {
-					if (potentialCost >= cost.get(neighbour)) {
-						// ignore the neighbour since we've already explored it from another path
-						// and the new path to the neighbour isn't any better.
+			if (neighbours != null) {
+				for (Position neighbour : neighbours) {
+					int potentialCost = cost.get(current) + neighbour.absoluteDistanceFrom(current);
+					if (!cost.containsKey(neighbour)) {
+						cost.put(neighbour, potentialCost);
 					}
-				} else if (!queue.contains(neighbour) || potentialCost < cost.get(neighbour)) {
-					// Map where we came from (to pathfind).
-					cameFrom.put(neighbour, current);
-					// Update costs.
-					cost.put(neighbour, potentialCost);
-					fCost.put(neighbour, neighbour.getCost());
-					if (!queue.contains(neighbour)) {
-						queue.add(neighbour);
+					if (explored.contains(neighbour)) {
+						if (potentialCost >= cost.get(neighbour)) {
+							// ignore the neighbour since we've already explored it from another path
+							// and the new path to the neighbour isn't any better.
+						}
+					} else if (!queue.contains(neighbour) || potentialCost < cost.get(neighbour)) {
+						// Map where we came from (to pathfind).
+						cameFrom.put(neighbour, current);
+						// Update costs.
+						cost.put(neighbour, potentialCost);
+						fCost.put(neighbour, neighbour.getCost());
+						if (!queue.contains(neighbour)) {
+							// TODO: Remove debug prints later.
+							System.out.println("Exploring: " + neighbour.getCurrX() + "," + neighbour.getCurrY() + " with cost: " + neighbour.getCost());
+							queue.add(neighbour);
+						}
 					}
 				}
 			}
@@ -386,7 +398,9 @@ public class Agent {
 			if (canMoveInto(local_map[current.getCurrY()][current.getCurrX()-1])) {
 				legalPositions.add(new Position(current.getX(), current.getY(), current.getCurrX()-1, current.getCurrY(), current.getReward()));
 			}
-		} else if (current.getCurrX() != LOCAL_MAP_SIZE-1) {
+		}
+		
+		if (current.getCurrX() != LOCAL_MAP_SIZE-1) {
 			if (canMoveInto(local_map[current.getCurrY()][current.getCurrX()+1])) {
 				legalPositions.add(new Position(current.getX(), current.getY(), current.getCurrX()+1, current.getCurrY(), current.getReward()));
 			}
@@ -397,13 +411,15 @@ public class Agent {
 			if (canMoveInto(local_map[current.getCurrY()-1][current.getCurrX()])) {
 				legalPositions.add(new Position(current.getX(), current.getY(), current.getCurrX(), current.getCurrY()-1, current.getReward()));
 			}
-		} else if (current.getCurrY() != LOCAL_MAP_SIZE-1) {
+		}
+		
+		if (current.getCurrY() != LOCAL_MAP_SIZE-1) {
 			if (canMoveInto(local_map[current.getCurrY()+1][current.getCurrX()])) {
 				legalPositions.add(new Position(current.getX(), current.getY(), current.getCurrX(), current.getCurrY()+1, current.getReward()));
 			}
 		}
 		
-		return null;
+		return legalPositions;
 	}
 
 	/**
@@ -432,64 +448,72 @@ public class Agent {
 	 */
 	private Position findPOI() {
 		// all points of interest to return.
-		Position point = null;
+		List<Position> points = new ArrayList<Position>();
 		
 		if (inventory.get('g') > 0) {
 			// We have gold, add interest to returning to starting position.
-			point = new Position(START_X, START_Y, START_X, START_Y, 100);
+			points.add(new Position(START_X, START_Y, START_X, START_Y, 100));
 		} else {
 			// Brute force search for interesting points.
 			for (int y = 0; y < LOCAL_MAP_SIZE; y++) {
 				for (int x = 0; x < LOCAL_MAP_SIZE; x++) {
-					if (point == null) {
-						switch (local_map[y][x]) {
-						case 'T':
-							// If we have a tree, it's more interesting if we have an axe.
-							if (inventory.get('a') > 0) {
-								point = new Position(x, y, x, y, 70);
-							} else {
-								point = new Position(x, y, x, y, 20);
-							}
-							break;
-						case '*':
-							if (inventory.get('d') > 0) {
-								point = new Position(x, y, x, y, 70);
-							} else {
-								point = new Position(x, y, x, y, 20);
-							}
-							break;
-						case 'd':
-							if (inventory.get('k') > 0) {
-								point = new Position(x, y, x, y, 70);
-							} else {
-								point = new Position(x, y, x, y, 10);
-							}
-							break;
-						case 'g':
-							point = new Position(x, y, x, y, 100);
-							break;
-						case 'a':
-							point = new Position(x, y, x, y, 50);
-							break;
-						case 'k':
-							point = new Position(x, y, x, y, 50);
-							break;
-						case 'x':
-							point = new Position(x, y, x, y, 20);
-							break;
-						case '~':
-							point = new Position(x, y, x, y, 0);
-							break;
-						case ' ':
-							point = new Position(x, y, x, y, 10);
-							break;
+					switch (local_map[y][x]) {
+					case 'T':
+						// If we have a tree, it's more interesting if we have an axe.
+						if (inventory.get('a') > 0) {
+							points.add(new Position(x, y, x, y, 70));
+						} else {
+							points.add(new Position(x, y, x, y, 20));
 						}
+						break;
+					case '*':
+						if (inventory.get('d') > 0) {
+							points.add(new Position(x, y, x, y, 70));
+						} else {
+							points.add(new Position(x, y, x, y, 20));
+						}
+						break;
+					case 'd':
+						if (inventory.get('k') > 0) {
+							points.add(new Position(x, y, x, y, 70));
+						} else {
+							points.add(new Position(x, y, x, y, 30));
+						}
+						break;
+					case 'g':
+						points.add(new Position(x, y, x, y, 100));
+						break;
+					case 'a':
+						points.add(new Position(x, y, x, y, 50));
+						break;
+					case 'k':
+						points.add(new Position(x, y, x, y, 50));
+						break;
+					case 'x':
+						points.add(new Position(x, y, x, y, 20));
+						break;
+					case '~':
+						points.add(new Position(x, y, x, y, 0));
+						break;
+					case ' ':
+						points.add(new Position(x, y, x, y, 10));
+						break;
 					}
 				}
 			}
 		}
 		
-		return point;
+		// Find the most interesting point.
+		Position pointOfInterest = points.get(0);
+		for (int i = 1; i < points.size(); i++) {
+			Position next = points.get(i);
+			
+			if (pointOfInterest.getReward() < next.getReward()) {
+				pointOfInterest = next;
+			}
+		}
+		
+		return pointOfInterest;
 	}
 
 	public static void main(String[] args) {

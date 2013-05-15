@@ -326,6 +326,7 @@ public class Agent {
 				// If its not a floor space or water, it must be interesting.
 				switch (local_map[y][x]) {
 				case 'T':
+					// If we have a tree, it's more interesting if we have an axe.
 					if (inventory.get('a') > 0) {
 						points.add(new Position(x, y, posx, posy, 70));
 					} else {
@@ -391,7 +392,7 @@ public class Agent {
 
 		// attach a view to the agent
 		IAgentView agentView;
-		//aaaa
+		
 		if (args.length >= 2 && args[2].equals("-gui")) {
 			agentView = new AgentGUIView();
 		} else {

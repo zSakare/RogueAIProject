@@ -391,7 +391,7 @@ public class Agent {
 
 		// attach a view to the agent
 		IAgentView agentView;
-		
+		//aaaa
 		if (args.length >= 2 && args[2].equals("-gui")) {
 			agentView = new AgentGUIView();
 		} else {

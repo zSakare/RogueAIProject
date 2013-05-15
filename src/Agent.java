@@ -10,7 +10,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.PriorityQueue;
 
 public class Agent {
@@ -32,6 +34,9 @@ public class Agent {
 	private int minx, miny, maxx, maxy; // maximally explored area (for
 										// debugging output)
 
+	// Inventory represented by map.
+	private Map<Character, Integer> inventory = new HashMap<Character, Integer>();
+	
 	final static int EAST = 0;
 	final static int NORTH = 1;
 	final static int WEST = 2;
@@ -63,6 +68,12 @@ public class Agent {
 		miny = maxy = posy;		
 		initx = posx;
 		inity = posy;
+		
+		// Populate inventory.
+		inventory.put('d', 0);
+		inventory.put('k', 0);
+		inventory.put('a', 0);
+		inventory.put('g', 0);
 	}
 
 	/**

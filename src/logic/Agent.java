@@ -9,19 +9,26 @@ package logic;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Array;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 
-import model.Position;
+import view.*;
+import model.*;
 
 public class Agent {
 
+	private List<IAgentView> views; // list of all the views observing this agent
+	
 	private char local_map[][]; // our local representation of the map
 
+	private char last_view[][]; // last view received by server
+	
 	// Size of the local map (i.e. how far the agent can explore)
 	private static final int LOCAL_MAP_SIZE = 160;
 
@@ -51,6 +58,8 @@ public class Agent {
 	private char lastAction = ' ';
 
 	public Agent() {
+		views = new LinkedList<IAgentView>();
+		
 		local_map = new char[LOCAL_MAP_SIZE][];
 		for (int i = 0; i < LOCAL_MAP_SIZE; ++i) {
 			local_map[i] = new char[LOCAL_MAP_SIZE];
@@ -78,50 +87,77 @@ public class Agent {
 		inventory.put('a', 0);
 		inventory.put('g', 0);
 	}
-
-	/**
-	 * Returns a representation of the map currently explored by the agent.
-	 * 
-	 * @return String representing map
-	 */
-	public String getExploredArea() {
-		String res = "-- Agent Map: --\n";
-		res += " - This is what the AI can see... -\n";
-		// draw top border
-		for (int x = minx; x < maxx + 2; ++x) {
-			res += '%';
+	
+	// adds a view to our view list
+	public void addView(IAgentView view) {
+		views.add(view);
+	}
+	
+	// signal to all views to refresh
+	public void updateViews() {
+		for (IAgentView v : views) {
+			v.onUpdate();
 		}
-		res += '\n';
-		for (int y = miny; y < maxy; ++y) {
-			res += '%';
-			for (int x = minx; x < maxx; ++x) {
-				if (x == posx && y == posy) {
-					res += getCharacterForDirection(direction);
-				} else if (x == initx && y == inity) {
-					res += 'S';
-				} else {
-					res += String.valueOf(local_map[y][x]);
-				}
-			}
-			res += "%\n";
-		}
-		// draw bottom border
-		for (int x = minx; x < maxx + 2; ++x) {
-			res += '%';
-		}
-		return res;
 	}
 
+	// Get our minimum explored X value
+	public int getMinX() {
+		return minx;
+	}
+	
+	// Get our minimum explored Y value
+	public int getMinY() {
+		return miny;
+	}
+	
+	// Get our maximum explored X value
+	public int getMaxX() {
+		return maxx;
+	}
+	
+	// Get our maximum explored Y value
+	public int getMaxY() {
+		return maxy;
+	}
+	
+	// Get our current X value
+	public int getX() {
+		return posx;
+	}
+	
+	// Get our current Y value
+	public int getY() {
+		return posy;
+	}
+	
+	// Get the position that our agent started at (typically halfway point)
+	public int getInitX() {
+		return initx;
+	}
+	
+	public int getInitY() {
+		return inity;
+	}
+	
+	// Get the direction (0 = EAST, increasing counterclockwise) our agent is facing
+	public int getDirection() {
+		return direction;
+	}
+	
+	public char [][] getLastView() {
+		return last_view;
+		
+	}
+	// Get the character at the given position
+	public char charAt(int x, int y) {
+		return local_map[y][x];
+	}
+	
 	/** returns whether a block can be moved into **/
 	public static boolean canMoveInto(char block) {
 		return (block != '*' && block != '-' && block != 'T');
 	}
 	
-	public static final char [] arrows = {'>','^','<','v'};
-	
-	public static char getCharacterForDirection(int dirn) {
-		return arrows[dirn];
-	}
 	
 	public void handle_action(int action) {
 
@@ -168,7 +204,8 @@ public class Agent {
 		// Rotate the view so that 0 = east, 1 = north etc (i.e. back into world space)
 		view = rotate_view(view, direction);
 
-		print_view(view);
+		last_view = view;
+		
 		// Now overlay the rotated view onto the global map
 		for (y = posy - VIEW_HALF_SIZE, yy = 0; y <= posy + VIEW_HALF_SIZE; ++y, ++yy) {
 			for (x = posx - VIEW_HALF_SIZE, xx = 0; x <= posx + VIEW_HALF_SIZE; ++x, ++xx) {
@@ -226,10 +263,10 @@ public class Agent {
 	public char get_action(char view[][]) {
 		
 		// Perform a search and pick best next move.
-		int ch = searchAStar();
+		//int ch = searchAStar();
 		
 		// REPLACE THIS CODE WITH AI TO CHOOSE ACTION
-		/**
+		
 		int ch = 0;
 
 		System.out.print("Enter Action(s): ");
@@ -258,7 +295,7 @@ public class Agent {
 		} catch (IOException e) {
 			System.out.println("IO error:" + e);
 		}
-		**/
+		
 		return (char) ch;
 	}
 
@@ -284,10 +321,10 @@ public class Agent {
 		List<Position> points = new ArrayList<Position>();
 		
 		// Brute force search for interesting points.
-		for (int x = 0; x < LOCAL_MAP_SIZE; x++) {
-			for (int y = 0; y < LOCAL_MAP_SIZE; y++) {
+		for (int y = 0; y < LOCAL_MAP_SIZE; y++) {
+			for (int x = 0; x < LOCAL_MAP_SIZE; x++) {
 				// If its not a floor space or water, it must be interesting.
-				switch (local_map[x][y]) {
+				switch (local_map[y][x]) {
 				case 'T':
 					if (inventory.get('a') > 0) {
 						points.add(new Position(x, y, posx, posy, 70));
@@ -323,29 +360,6 @@ public class Agent {
 		return points;
 	}
 
-	void print_view(char view[][], boolean show_arrow) {
-		int i, j;
-		int size = view.length;
-		int half_size = size / 2;
-		System.out.println("\n+-----+");
-		for (i = 0; i < size; i++) {
-			System.out.print("|");
-			for (j = 0; j < size; j++) {
-				if (show_arrow && (i == half_size) && (j == half_size)) {
-					System.out.print('^');
-				} else {
-					System.out.print(view[i][j]);
-				}
-			}
-			System.out.println("|");
-		}
-		System.out.println("+-----+");
-	}
-	
-	void print_view(char view[][]) {
-		print_view(view, false);
-	}
-
 	public static void main(String[] args) {
 		InputStream in = null;
 		OutputStream out = null;
@@ -360,7 +374,7 @@ public class Agent {
 		testAgent();
 
 		if (args.length < 2) {
-			System.out.println("Usage: java Agent -p <port>\n");
+			System.out.println("Usage: java Agent -p <port> [-gui]\n");
 			System.exit(-1);
 		}
 
@@ -375,6 +389,16 @@ public class Agent {
 			System.exit(-1);
 		}
 
+		// attach a view to the agent
+		IAgentView agentView;
+		
+		if (args.length >= 2 && args[2].equals("-gui")) {
+			agentView = new AgentGUIView();
+		} else {
+			agentView = new AgentConsoleView();
+		}
+		agentView.setAgent(agent);
+		
 		try { // scan 5-by-5 wintow around current location
 			while (true) {
 				for (i = 0; i < 5; i++) {
@@ -388,10 +412,11 @@ public class Agent {
 						}
 					}
 				}
-				agent.print_view(view); // COMMENT THIS OUT BEFORE SUBMISSION
 
 				agent.parse_view(view);
-				System.out.println(agent.getExploredArea());
+				
+				agent.updateViews();
+				
 				agent.lastAction = agent.get_action(view);
 				
 				agent.handle_action(agent.lastAction);

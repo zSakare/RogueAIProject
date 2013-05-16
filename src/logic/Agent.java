@@ -166,7 +166,7 @@ public class Agent {
 	
 	/** returns whether a block can be moved into **/
 	public static boolean canMoveInto(char block) {
-		return (block != '*' && block != '-' && block != 'T');
+		return (block != '*' && block != '-' && block != 'T' && block != 'x');
 	}
 	
 	

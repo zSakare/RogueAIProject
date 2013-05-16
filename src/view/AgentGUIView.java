@@ -2,12 +2,17 @@ package view;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.util.LinkedList;
+import java.util.List;
+
 import javax.swing.*;
+
+import controller.IAgentController;
 
 import view.gui.*;
 import logic.*;
 
-public class AgentGUIView implements IAgentView {
+public class AgentGUIView implements IAgentView, IMovePanelSubscriber {
 
 	Agent agent;
 	
@@ -16,15 +21,19 @@ public class AgentGUIView implements IAgentView {
 	JButton btnExit;
 	
 	TurnIndicator tiTurns; 
+	MovePanel mpMove;
 	
 	WorldMap wmWorld;
 	JScrollPane scrWorld; // world scroller
 	
+	private IAgentController controller;
+	
 	public AgentGUIView(Agent agent) {
 		this.agent = agent;
+		controller = null;
 		
 		panel = new JPanel(new GridBagLayout());
-		panel.setPreferredSize(new Dimension(1280, 800));
+		panel.setPreferredSize(new Dimension(800, 600));
 		
 		GridBagConstraints ctrs = new GridBagConstraints();
 		
@@ -41,6 +50,12 @@ public class AgentGUIView implements IAgentView {
 		ctrs.weighty = 0.15; // 15% of height
 		panel.add(tiTurns, ctrs);
 
+		mpMove = new MovePanel(agent);
+		ctrs.gridx = 1;
+		ctrs.gridy = 1;
+		ctrs.weighty = 0.75; // 75% of height
+		panel.add(mpMove, ctrs);
+		mpMove.addSubscriber(this); // subscribe to move panel updates
 
 		btnExit = new JButton("Exit");
 		btnExit.addActionListener(new ActionListener() {
@@ -67,15 +82,6 @@ public class AgentGUIView implements IAgentView {
 		
 		panel.repaint();
 		
-		JFrame frame = new JFrame("Agent 007");
-		frame.getContentPane().add(panel);
-		frame.addWindowListener(new WindowCloseManager());
-		frame.pack();
-		frame.setVisible(true);
-		
-		agent.addView(this);
-		
-		onUpdate(agent.getX(), agent.getY());		
 	}
 	
 	private static class WindowCloseManager extends WindowAdapter {
@@ -89,6 +95,10 @@ public class AgentGUIView implements IAgentView {
 		this.agent = agent;
 		
 		agent.addView(this);
+	}
+	
+	public void onUpdate() {
+		onUpdate(agent.getX(), agent.getY());
 	}
 
 	@Override
@@ -112,6 +122,58 @@ public class AgentGUIView implements IAgentView {
 		wmWorld.scrollRectToVisible(new Rectangle(cx - 100, cy - 100, 200, 200));
 	}
 	
+	@Override
+	public void setController(IAgentController controller) {
+		this.controller = controller;		
+	}
+	
+	@Override
+	public void notifyAction(char action) {
+		controller.onAction(action);
+	}
 
+	@Override
+	public void run(int port) {
+		char [][] view;
+		char action;
+		JFrame frame = new JFrame("Agent 007");
+		frame.getContentPane().add(panel);
+		frame.addWindowListener(new WindowCloseManager());
+		frame.pack();
+		frame.setVisible(true);
+		
+		agent.addView(this);
+		
+		/* Perform one update. */
+		view = controller.waitForViewport();
+		if (view == null) {
+			System.out.println("Did not receive viewport from engine! Exiting...");
+			System.exit(1);
+		}
+		
+		onUpdate(agent.getX(), agent.getY());		
+	}
+
+	@Override
+	public void onLeft() {
+		notifyAction('L');
+		// get new state
+		controller.waitForViewport();
+		onUpdate();
+	}
+
+	@Override
+	public void onRight() {
+		notifyAction('R');
+		controller.waitForViewport();
+		onUpdate();
+	}
+
+	@Override
+	public void onForward() {
+		notifyAction('F');
+		controller.waitForViewport();
+		onUpdate();
+	}
 
 }

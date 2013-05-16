@@ -1,14 +1,24 @@
 package view;
 
+import java.io.*;
+import java.net.Socket;
+import java.util.List;
+
+import java.util.*;
+import controller.IAgentController;
 import logic.Agent;
 
 public class AgentConsoleView implements IAgentView {
 
 	private Agent agent;
+	private IAgentController controller;
+	
+	
+	private char action;
 	
 	public AgentConsoleView(Agent agent) {
 		this.agent = agent;
-		
+		controller = null;
 		agent.addView(this);
 	}
 	
@@ -106,6 +116,72 @@ public class AgentConsoleView implements IAgentView {
 	
 	public static char getCharacterForDirection(int dirn) {
 		return arrows[dirn];
+	}
+	
+	@Override
+	public void setController(IAgentController controller) {
+		this.controller = controller;		
+	}
+	
+	@Override
+	public void notifyAction(char action) {
+		controller.onAction(action);
+	}
+
+	@Override
+	public void run(int port) {
+		char [][] view;
+		
+		do {
+			/* get network input from controller */
+			view = controller.waitForViewport();
+			if (view != null) {
+				
+				System.out.print("Enter Action(s): [f l r c o b q]");
+				action = get_action();
+				
+				if (action != 'q') {
+					notifyAction(action);
+				}
+			} else {
+				System.out.println("Did not receive viewport from engine! Exiting...");
+				System.exit(1);
+			}
+		}
+		while (action != 'q');
+		
+		System.out.println("View ended...");
+	}
+	
+	char get_action() {
+		int ch = 0;
+		try {
+			while (ch != -1) {
+				// read character from keyboard
+				ch = System.in.read();
+
+				switch (ch) { // if character is a valid action, return it
+				case 'F':
+				case 'L':
+				case 'R':
+				case 'C':
+				case 'O':
+				case 'B':
+				case 'Q':
+				case 'f':
+				case 'l':
+				case 'r':
+				case 'c':
+				case 'o':
+				case 'b':
+				case 'q':
+					return (char) ch;
+				}
+			}
+		} catch (IOException e) {
+			System.out.println("IO error:" + e);
+		}
+		return (char)'q';
 	}
 
 }

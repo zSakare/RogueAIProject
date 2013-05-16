@@ -19,10 +19,9 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
 
-import model.Position;
-import view.AgentConsoleView;
-import view.AgentGUIView;
-import view.IAgentView;
+import controller.*;
+import model.*;
+import view.*;
 
 public class Agent {
 
@@ -60,8 +59,9 @@ public class Agent {
 	// Facing direction, initially east
 	private int direction = EAST;
 
-	private char lastAction = ' ';
-
+	// next action to be given to the agent
+	private char giveAction = ' ';
+	
 	public Agent() {
 		views = new LinkedList<IAgentView>();
 		
@@ -294,6 +294,7 @@ public class Agent {
 		}
 		*/
 		// REPLACE THIS CODE WITH AI TO CHOOSE ACTION
+		
 		
 		int ch = 0;
 
@@ -537,15 +538,8 @@ public class Agent {
 	}
 
 	public static void main(String[] args) {
-		InputStream in = null;
-		OutputStream out = null;
-		Socket socket = null;
 		Agent agent = new Agent();
-		char view[][] = new char[5][5];
 		int port;
-		int ch;
-		int i, j;
-		
 		// TODO remove me
 		testAgent();
 
@@ -556,15 +550,6 @@ public class Agent {
 
 		port = Integer.parseInt(args[1]);
 
-		try { // open socket to Game Engine
-			socket = new Socket("localhost", port);
-			in = socket.getInputStream();
-			out = socket.getOutputStream();
-		} catch (IOException e) {
-			System.out.println("Could not bind to port: " + port);
-			System.exit(-1);
-		}
-
 		// attach a view to the agent
 		IAgentView agentView = null;
 		
@@ -574,38 +559,15 @@ public class Agent {
 			agentView = new AgentConsoleView(agent);
 		}
 		
-		try { // scan 5-by-5 wintow around current location
-			while (true) {
-				for (i = 0; i < 5; i++) {
-					for (j = 0; j < 5; j++) {
-						if (!((i == 2) && (j == 2))) {
-							ch = in.read();
-							if (ch == -1) {
-								System.exit(-1);
-							}
-							view[i][j] = (char) ch;
-						}
-					}
-				}
-
-				agent.parse_view(view);
-				
-				agent.updateViews();
-				
-				agent.lastAction = agent.get_action(view);
-				
-				agent.handle_action(agent.lastAction);
-				out.write(agent.lastAction);
-			}
-		} catch (IOException e) {
-			System.out.println("Lost connection to port: " + port);
-			System.exit(-1);
-		} finally {
-			try {
-				socket.close();
-			} catch (IOException e) {
-			}
-		}
+		// Create the controller
+		IAgentController controller = new AgentConsoleController(agent, agentView);
+		
+		controller.initialiseNetwork(port);
+		
+		// hack, pass the port through to the view (instead of the controller)
+		agentView.run(port);
+		
+		controller.shutdown();
 	}
 	
 	public static void testAgent() {

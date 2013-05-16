@@ -1,9 +1,14 @@
 package view.gui;
 
-import java.awt.*;
-import javax.swing.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Font;
 
-import logic.*;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.SwingConstants;
+
+import logic.Agent;
 
 /**
  * Indicates what turn the agent is in

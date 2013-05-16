@@ -1,11 +1,13 @@
 package view.gui;
 
-import java.awt.*;
-import java.util.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.util.LinkedList;
+import java.util.List;
 
-import javax.swing.*;
+import javax.swing.JPanel;
 
-import logic.*;
+import logic.Agent;
 import model.Position;
 
 /**
@@ -102,7 +104,7 @@ public class WorldMap extends JPanel {
 		}
 		pathPieces.clear();
 		/* get A* path */
-		java.util.List<Position> pathPositions = agent.searchAStar(piece.x, piece.y, agent.getX(), agent.getY());
+		List<Position> pathPositions = agent.searchAStar(piece.x, piece.y, agent.getX(), agent.getY());
 		if (pathPositions == null) {
 			return;
 		}

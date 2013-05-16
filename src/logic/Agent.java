@@ -326,7 +326,7 @@ public class Agent {
 		Position goal = findPOI();
 		
 		// Add the current position.
-		queue.add(new Position(goal.getX(), goal.getY(), posx, posy, 10));
+		queue.add(new Position(goal.getX(), goal.getY(), posx, posy, 20));
 		
 		// Mark the initial scores.
 		Map<Position, Integer> cost = new HashMap<Position, Integer>();
@@ -334,7 +334,7 @@ public class Agent {
 		Map<Position, Integer> fCost = new HashMap<Position, Integer>();
 		
 		cost.put(queue.peek(), 0);
-		fCost.put(queue.peek(), (cost.get(queue.peek()) + queue.peek().getCost()));
+		fCost.put(queue.peek(), (cost.get(queue.peek()) + queue.peek().absoluteDistanceFrom(goal)));
 		
 		// A star!
 		while (!queue.isEmpty()) {
@@ -368,10 +368,10 @@ public class Agent {
 						cameFrom.put(neighbour, current);
 						// Update costs.
 						cost.put(neighbour, potentialCost);
-						fCost.put(neighbour, neighbour.getCost());
+						fCost.put(neighbour, neighbour.absoluteDistanceFrom(goal));
 						if (!queue.contains(neighbour)) {
 							// TODO: Remove debug prints later.
-							System.out.println("Exploring: " + neighbour.getCurrX() + "," + neighbour.getCurrY() + " with cost: " + neighbour.getCost());
+							System.out.println("Exploring: " + neighbour.getCurrX() + "," + neighbour.getCurrY() + " with cost: " + neighbour.absoluteDistanceFrom(goal));
 							queue.add(neighbour);
 						}
 					}
@@ -452,7 +452,7 @@ public class Agent {
 		
 		if (inventory.get('g') > 0) {
 			// We have gold, add interest to returning to starting position.
-			points.add(new Position(START_X, START_Y, START_X, START_Y, 100));
+			points.add(new Position(START_X, START_Y, posx, posy, 100));
 		} else {
 			// Brute force search for interesting points.
 			for (int y = 0; y < LOCAL_MAP_SIZE; y++) {
@@ -461,44 +461,44 @@ public class Agent {
 					case 'T':
 						// If we have a tree, it's more interesting if we have an axe.
 						if (inventory.get('a') > 0) {
-							points.add(new Position(x, y, x, y, 70));
+							points.add(new Position(x, y, posx, posy, 70));
 						} else {
-							points.add(new Position(x, y, x, y, 20));
+							points.add(new Position(x, y, posx, posy, 20));
 						}
 						break;
 					case '*':
 						if (inventory.get('d') > 0) {
-							points.add(new Position(x, y, x, y, 70));
+							points.add(new Position(x, y, posx, posy, 70));
 						} else {
-							points.add(new Position(x, y, x, y, 20));
+							points.add(new Position(x, y, posx, posy, 20));
 						}
 						break;
 					case 'd':
-						points.add(new Position(x, y, x, y, 50));
+						points.add(new Position(x, y, posx, posy, 50));
 						break;
 					case 'g':
-						points.add(new Position(x, y, x, y, 100));
+						points.add(new Position(x, y, posx, posy, 100));
 						break;
 					case 'a':
-						points.add(new Position(x, y, x, y, 50));
+						points.add(new Position(x, y, posx, posy, 50));
 						break;
 					case 'k':
-						points.add(new Position(x, y, x, y, 50));
+						points.add(new Position(x, y, posx, posy, 50));
 						break;
 					case 'x':
-						points.add(new Position(x, y, x, y, 20));
+						points.add(new Position(x, y, posx, posy, 20));
 						break;
 					case '~':
-						points.add(new Position(x, y, x, y, 0));
+						points.add(new Position(x, y, posx, posy, -100));
 						break;
 					case ' ':
-						points.add(new Position(x, y, x, y, 10));
+						points.add(new Position(x, y, posx, posy, 0));
 						break;
 					case '-':
 						if (inventory.get('k') > 0) {
-							points.add(new Position(x, y, x, y, 70));
+							points.add(new Position(x, y, posx, posy, 70));
 						} else {
-							points.add(new Position(x, y, x, y, 10));
+							points.add(new Position(x, y, posx, posy, 0));
 						}
 					}
 				}
@@ -510,12 +510,13 @@ public class Agent {
 		for (int i = 1; i < points.size(); i++) {
 			Position next = points.get(i);
 			
-			if (pointOfInterest.getReward() < next.getReward()) {
+			if (pointOfInterest.getCost() > next.getCost()) {
+				System.out.println("Cost: " + pointOfInterest.getCost() + " compared to: " + next.getCost());
 				pointOfInterest = next;
 			}
 		}
 		
-		return pointOfInterest;
+		return (new Position(pointOfInterest.getX(), pointOfInterest.getY(), pointOfInterest.getX(), pointOfInterest.getY(), pointOfInterest.getReward()));
 	}
 
 	public static void main(String[] args) {

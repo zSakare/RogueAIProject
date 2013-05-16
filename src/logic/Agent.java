@@ -272,6 +272,7 @@ public class Agent {
 
 	
 	public char get_action(char view[][]) {
+		/* Add later, commented out for gui view.
 		// Find interesting point (scan map) and put into PriQ.
 		/*Position goal = findPOI();
 		
@@ -326,6 +327,11 @@ public class Agent {
 		
 		// Create the goal state based on params.
 		Position goal = new Position(goalX, goalY, goalX, goalY, 0);
+		
+		// Unpathable goal do not bother searching or we will cause an infinite loop.
+		if (!canMoveInto(local_map[goalY][goalX])) {
+			return null;
+		}
 		
 		// Add the current position.
 		queue.add(new Position(goal.getX(), goal.getY(), currentX, currentY, 20));

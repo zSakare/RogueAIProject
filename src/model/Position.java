@@ -115,6 +115,13 @@ public class Position implements Comparable<Position> {
 	}
 
 	public Integer absoluteDistanceFrom(Position positionFrom) {
-		return (int) Math.sqrt(Math.pow(this.x - positionFrom.x, 2) + Math.pow(this.y - positionFrom.y, 2));
+		return (int) Math.sqrt(Math.pow(this.currX - positionFrom.currX, 2) + Math.pow(this.currY - positionFrom.currY, 2));
+	}
+	
+	/**
+	 * Hash for hashset/hashmap.
+	 */
+	public int hashCode() {
+		return x + y + currX + currY;
 	}
 }

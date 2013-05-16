@@ -272,9 +272,11 @@ public class Agent {
 
 	
 	public char get_action(char view[][]) {
+		// Find interesting point (scan map) and put into PriQ.
+		Position goal = findPOI();
 		
 		// Perform a search and pick best next move.
-		List<Position> path = searchAStar();
+		List<Position> path = searchAStar(goal.getX(), goal.getY(), posx, posy);
 		
 		// TODO: Remove debug prints later.
 		for (Position step : path) {
@@ -315,18 +317,18 @@ public class Agent {
 		return (char) ch;
 	}
 
-	private List<Position> searchAStar() {
+	public List<Position> searchAStar(int goalX, int goalY, int currentX, int currentY) {
 		PriorityQueue<Position> queue = new PriorityQueue<Position>();
 		Set<Position> explored = new HashSet<Position>();
 		
 		// Remember each position's successor.
 		Map<Position, Position> cameFrom = new HashMap<Position, Position>();
 		
-		// Find interesting point (scan map) and put into PriQ.
-		Position goal = findPOI();
+		// Create the goal state based on params.
+		Position goal = new Position(goalX, goalY, goalX, goalY, 0);
 		
 		// Add the current position.
-		queue.add(new Position(goal.getX(), goal.getY(), posx, posy, 20));
+		queue.add(new Position(goal.getX(), goal.getY(), currentX, currentY, 20));
 		
 		// Mark the initial scores.
 		Map<Position, Integer> cost = new HashMap<Position, Integer>();
@@ -470,7 +472,7 @@ public class Agent {
 						if (inventory.get('d') > 0) {
 							points.add(new Position(x, y, posx, posy, 70));
 						} else {
-							points.add(new Position(x, y, posx, posy, 20));
+							points.add(new Position(x, y, posx, posy, 10));
 						}
 						break;
 					case 'd':

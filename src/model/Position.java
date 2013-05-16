@@ -10,6 +10,7 @@ public class Position implements Comparable<Position> {
 	private int currX;
 	private int currY;
 	private int reward;
+	private int cost;
 	
 	public Position(int x, int y, int currX, int currY, int reward) {
 		this.setX(x);
@@ -17,6 +18,7 @@ public class Position implements Comparable<Position> {
 		this.setCurrX(currX);
 		this.setCurrY(currY);
 		this.setReward(reward);
+		setCost(0);
 	}
 
 	public int getX() {
@@ -76,7 +78,12 @@ public class Position implements Comparable<Position> {
 		return (int) Math.sqrt(Math.pow((currX - x), 2) + Math.pow((currY - y), 2));
 	}
 	
-	public Integer getCost() {
+	/**
+	 * Gets how interesting the position is.
+	 * 
+	 * @return - how interesting the object is. Based on distance and reward.
+	 */
+	public Integer getInterest() {
 		return (int) getAbsoluteDistance() - getReward();
 	}
 	
@@ -123,5 +130,13 @@ public class Position implements Comparable<Position> {
 	 */
 	public int hashCode() {
 		return x + y + currX + currY;
+	}
+
+	public Integer getCost() {
+		return cost;
+	}
+
+	public void setCost(int cost) {
+		this.cost = cost;
 	}
 }

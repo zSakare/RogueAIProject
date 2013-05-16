@@ -351,6 +351,7 @@ public class Agent {
 		Map<Position, Integer> fCost = new HashMap<Position, Integer>();
 		 
 		cost.put(queue.peek(), 0);
+		queue.peek().setCost(0);
 		fCost.put(queue.peek(), (cost.get(queue.peek()) + queue.peek().absoluteDistanceFrom(goal)));
 		
 		// A star!
@@ -385,6 +386,7 @@ public class Agent {
 						cameFrom.put(neighbour, current);
 						// Update costs.
 						cost.put(neighbour, potentialCost);
+						neighbour.setCost(potentialCost);
 						fCost.put(neighbour, neighbour.absoluteDistanceFrom(goal));
 						if (!queue.contains(neighbour)) {
 							// TODO: Remove debug prints later.
@@ -527,8 +529,8 @@ public class Agent {
 		for (int i = 1; i < points.size(); i++) {
 			Position next = points.get(i);
 			
-			if (pointOfInterest.getCost() > next.getCost()) {
-				System.out.println("Cost: " + pointOfInterest.getCost() + " compared to: " + next.getCost());
+			if (pointOfInterest.getInterest() > next.getInterest()) {
+				System.out.println("Cost: " + pointOfInterest.getInterest() + " compared to: " + next.getInterest());
 				pointOfInterest = next;
 			}
 		}

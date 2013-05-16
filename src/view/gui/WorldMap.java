@@ -107,6 +107,8 @@ public class WorldMap extends JPanel {
 		List<Position> pathPositions = agent.searchAStar(piece.x, piece.y, agent.getX(), agent.getY());
 		if (pathPositions == null) {
 			return;
+		} else {
+			System.out.println("Total Cost: " + pathPositions.size());
 		}
 		/* tag all the pieces on the path to the goal */
 		for (Position p : pathPositions) {

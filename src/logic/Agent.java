@@ -338,7 +338,7 @@ public class Agent {
 		Position goal = new Position(goalX, goalY, goalX, goalY, 0);
 		
 		// Unpathable goal do not bother searching or we will cause an infinite loop.
-		if (!canMoveInto(local_map[goalY][goalX])) {
+		if (!canMoveThrough(local_map[goalY][goalX])) {
 			return null;
 		}
 		
@@ -412,26 +412,26 @@ public class Agent {
 		
 		// Checking we do not go out of bounds.
 		if (current.getCurrX() != 0) {
-			if (canMoveThrough(local_map[current.getCurrY()][current.getCurrX()-1])) {
+			if (canMoveInto(local_map[current.getCurrY()][current.getCurrX()-1])) {
 				legalPositions.add(new Position(current.getX(), current.getY(), current.getCurrX()-1, current.getCurrY(), current.getReward()));
 			}
 		}
 		
 		if (current.getCurrX() != LOCAL_MAP_SIZE-1) {
-			if (canMoveThrough(local_map[current.getCurrY()][current.getCurrX()+1])) {
+			if (canMoveInto(local_map[current.getCurrY()][current.getCurrX()+1])) {
 				legalPositions.add(new Position(current.getX(), current.getY(), current.getCurrX()+1, current.getCurrY(), current.getReward()));
 			}
 		}
 		
 		// Checking we do not go out of bounds.
 		if (current.getCurrY() != 0) {
-			if (canMoveThrough(local_map[current.getCurrY()-1][current.getCurrX()])) {
+			if (canMoveInto(local_map[current.getCurrY()-1][current.getCurrX()])) {
 				legalPositions.add(new Position(current.getX(), current.getY(), current.getCurrX(), current.getCurrY()-1, current.getReward()));
 			}
 		}
 		
 		if (current.getCurrY() != LOCAL_MAP_SIZE-1) {
-			if (canMoveThrough(local_map[current.getCurrY()+1][current.getCurrX()])) {
+			if (canMoveInto(local_map[current.getCurrY()+1][current.getCurrX()])) {
 				legalPositions.add(new Position(current.getX(), current.getY(), current.getCurrX(), current.getCurrY()+1, current.getReward()));
 			}
 		}

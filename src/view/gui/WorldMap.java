@@ -1,11 +1,12 @@
 package view.gui;
 
 import java.awt.*;
-import java.awt.*;
+import java.util.*;
 
 import javax.swing.*;
 
 import logic.*;
+import model.Position;
 
 /**
  * Displays the worldmap (local map knowlegde) for a given agent
@@ -19,6 +20,8 @@ public class WorldMap extends JPanel {
 	
 	public static final int WORLDMAP_WIDTH = 3200;
 	public static final int WORLDMAP_HEIGHT = 3200;
+	
+	private java.util.List<WorldPiece> pathPieces; 
 	
 	// ideally the pieces are square... make your decision
 	private static final int PIECE_WIDTH = WORLDMAP_WIDTH / Agent.LOCAL_MAP_SIZE; // width of pieces
@@ -37,6 +40,8 @@ public class WorldMap extends JPanel {
 		// black colour to represent unexplored
 		this.setBackground(Color.BLACK);
 		
+		// initialise A* debugging list
+		pathPieces = new LinkedList<WorldPiece>();
 		//update(0, Agent.LOCAL_MAP_SIZE-1, 0, Agent.LOCAL_MAP_SIZE-1);
 	}
 	
@@ -66,7 +71,7 @@ public class WorldMap extends JPanel {
 				chr = agent.charAt(xx, yy);
 				piece = pieces[yy][xx];
 				if (piece == null) {
-					piece = new WorldPiece((xx % 2) == (yy % 2));
+					piece = new WorldPiece(this, (xx % 2) == (yy % 2), xx, yy);
 					pieces[yy][xx] = piece;
 					this.add(piece);
 					piece.setBounds(xx * PIECE_WIDTH, yy * PIECE_HEIGHT, PIECE_WIDTH, PIECE_HEIGHT);
@@ -86,7 +91,33 @@ public class WorldMap extends JPanel {
 		repaint();
 	}
 	
-
+	/**
+	 * Called when a piece is moused over
+	 * @param piece
+	 */
+	public void onMouseOver(WorldPiece piece) {
+		/* clear the existing path tags */
+		for (WorldPiece pc : pathPieces) {
+			pc.setTagged(null);
+		}
+		pathPieces.clear();
+		/* get A* path */
+		java.util.List<Position> pathPositions = agent.searchAStar(piece.x, piece.y, agent.getX(), agent.getY());
+		if (pathPositions == null) {
+			return;
+		}
+		/* tag all the pieces on the path to the goal */
+		for (Position p : pathPositions) {
+			/* tag the piece */
+			WorldPiece pc = pieces[p.getCurrY()][p.getCurrX()];
+			if (pc != null) {
+				pc.setTagged(Color.GREEN);
+				pathPieces.add(pc);
+			}
+		}
+		
+	}
+	
 	public static final char [] arrows = {'>','^','<','v'};
 	
 	public static char getCharacterForDirection(int dirn) {

@@ -474,11 +474,7 @@ public class Agent {
 						}
 						break;
 					case 'd':
-						if (inventory.get('k') > 0) {
-							points.add(new Position(x, y, x, y, 70));
-						} else {
-							points.add(new Position(x, y, x, y, 30));
-						}
+						points.add(new Position(x, y, x, y, 50));
 						break;
 					case 'g':
 						points.add(new Position(x, y, x, y, 100));
@@ -498,6 +494,12 @@ public class Agent {
 					case ' ':
 						points.add(new Position(x, y, x, y, 10));
 						break;
+					case '-':
+						if (inventory.get('k') > 0) {
+							points.add(new Position(x, y, x, y, 70));
+						} else {
+							points.add(new Position(x, y, x, y, 10));
+						}
 					}
 				}
 			}

@@ -273,7 +273,7 @@ public class Agent {
 	
 	public char get_action(char view[][]) {
 		// Find interesting point (scan map) and put into PriQ.
-		Position goal = findPOI();
+		/*Position goal = findPOI();
 		
 		// Perform a search and pick best next move.
 		List<Position> path = searchAStar(goal.getX(), goal.getY(), posx, posy);
@@ -282,7 +282,7 @@ public class Agent {
 		for (Position step : path) {
 			System.out.println("Move: (" + step.getCurrX() + "," + step.getCurrY() + ").");
 		}
-		
+		*/
 		// REPLACE THIS CODE WITH AI TO CHOOSE ACTION
 		
 		int ch = 0;
@@ -334,7 +334,7 @@ public class Agent {
 		Map<Position, Integer> cost = new HashMap<Position, Integer>();
 		// Predicted cost.
 		Map<Position, Integer> fCost = new HashMap<Position, Integer>();
-		
+		 
 		cost.put(queue.peek(), 0);
 		fCost.put(queue.peek(), (cost.get(queue.peek()) + queue.peek().absoluteDistanceFrom(goal)));
 		

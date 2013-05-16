@@ -166,9 +166,18 @@ public class Agent {
 	
 	/** returns whether a block can be moved into **/
 	public static boolean canMoveInto(char block) {
-		return (block != '*' && block != '-' && block != 'T' && block != 'x');
+		return (block != '*' && block != '-' && block != 'T' && block != 'x' && block != '~');
 	}
 	
+	/**
+	 * Returns whether a block can be traversed.
+	 * 
+	 * @param block - block to check
+	 * @return - whether a block can be traversed.
+	 */
+	public static boolean canMoveThrough(char block) {
+		return (block != '*' && block != '-' && block != 'T');
+	}
 	
 	public void handle_action(int action) {
 
@@ -403,26 +412,26 @@ public class Agent {
 		
 		// Checking we do not go out of bounds.
 		if (current.getCurrX() != 0) {
-			if (canMoveInto(local_map[current.getCurrY()][current.getCurrX()-1])) {
+			if (canMoveThrough(local_map[current.getCurrY()][current.getCurrX()-1])) {
 				legalPositions.add(new Position(current.getX(), current.getY(), current.getCurrX()-1, current.getCurrY(), current.getReward()));
 			}
 		}
 		
 		if (current.getCurrX() != LOCAL_MAP_SIZE-1) {
-			if (canMoveInto(local_map[current.getCurrY()][current.getCurrX()+1])) {
+			if (canMoveThrough(local_map[current.getCurrY()][current.getCurrX()+1])) {
 				legalPositions.add(new Position(current.getX(), current.getY(), current.getCurrX()+1, current.getCurrY(), current.getReward()));
 			}
 		}
 		
 		// Checking we do not go out of bounds.
 		if (current.getCurrY() != 0) {
-			if (canMoveInto(local_map[current.getCurrY()-1][current.getCurrX()])) {
+			if (canMoveThrough(local_map[current.getCurrY()-1][current.getCurrX()])) {
 				legalPositions.add(new Position(current.getX(), current.getY(), current.getCurrX(), current.getCurrY()-1, current.getReward()));
 			}
 		}
 		
 		if (current.getCurrY() != LOCAL_MAP_SIZE-1) {
-			if (canMoveInto(local_map[current.getCurrY()+1][current.getCurrX()])) {
+			if (canMoveThrough(local_map[current.getCurrY()+1][current.getCurrX()])) {
 				legalPositions.add(new Position(current.getX(), current.getY(), current.getCurrX(), current.getCurrY()+1, current.getReward()));
 			}
 		}

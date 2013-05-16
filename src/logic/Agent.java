@@ -373,7 +373,7 @@ public class Agent {
 						fCost.put(neighbour, neighbour.absoluteDistanceFrom(goal));
 						if (!queue.contains(neighbour)) {
 							// TODO: Remove debug prints later.
-							System.out.println("Exploring: " + neighbour.getCurrX() + "," + neighbour.getCurrY() + " with cost: " + neighbour.absoluteDistanceFrom(goal));
+							System.out.println("Exploring: " + neighbour.getCurrX() + "," + neighbour.getCurrY() + " with cost: " + cost.get(neighbour));
 							queue.add(neighbour);
 						}
 					}

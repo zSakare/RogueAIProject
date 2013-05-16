@@ -81,6 +81,8 @@ public class WorldMap extends JPanel {
 				
 				if (xx == agent.getX() && yy == agent.getY()) {
 					piece.myType = getCharacterForDirection(agent.getDirection());
+				} else if (xx == agent.getInitX() && yy == agent.getInitY()){
+					piece.myType = 'S';
 				} else {
 					piece.myType = chr;
 				}

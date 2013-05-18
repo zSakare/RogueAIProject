@@ -62,6 +62,9 @@ public class Agent {
 	// next action to be given to the agent
 	private char giveAction = ' ';
 	
+	private Position goal; // current goal position
+	private List<Position> currentPath; // current path (to avoid continuously recalculating)
+	
 	public Agent() {
 		views = new LinkedList<IAgentView>();
 		
@@ -87,6 +90,8 @@ public class Agent {
 		inity = posy;
 		
 		turnNumber = 0;
+		
+		currentPath = new LinkedList<Position>();
 		
 		// Populate inventory.
 		inventory.put('d', 0);
@@ -271,6 +276,13 @@ public class Agent {
 		return view_temp;
 	}
 
+	public Position getGoal() {
+		return goal;
+	}
+	
+	public List<Position> getPath() {
+		return currentPath;
+	}
 	
 	public char get_action(char view[][]) {
 		/* Add later, commented out for gui view.
@@ -499,8 +511,9 @@ public class Agent {
 				return -100;
 			case ' ':
 				// dependong on whether this cell is next to unexplored or no
+				// also prioritise distance (manhattan) - range of 5-20
 				if (hasNeighboursUnexplored(x, y)) {
-					return 20;
+					return Math.max(20 - manhattan(posx, posy, x, y), 5);
 				} else {
 					return 0;
 				}
@@ -515,6 +528,17 @@ public class Agent {
 		return 0;
 	}
 
+	/**
+	 * Return the manhattan distance between two points
+	 * @param startx
+	 * @param starty
+	 * @param goalx
+	 * @param goaly
+	 * @return Manhattan distance
+	 */
+	private int manhattan(int startx, int starty, int goalx, int goaly) {
+		return Math.abs(startx - goalx) + Math.abs(starty - goaly);
+	}
 	/**
 	 * returns the number of neighbours that are unexplored for a cell
 	 * @param x
@@ -584,28 +608,22 @@ public class Agent {
 	 * @return - an interesting point.
 	 */
 	public Position findPOI() {
-		// all points of interest to return.
-		List<Position> points = new ArrayList<Position>();
-		
-		// Brute force search for interesting points.
-		for (int y = miny; y <= maxx; y++) {
-			for (int x = minx; x < maxx; x++) {
+		Position best = null; // best position so far
+		int bestScore = -1; // score for best position
+		// Brute force search for interesting points in our window of explored area.
+		for (int y = 0; y < LOCAL_MAP_SIZE; y++) {
+			for (int x = 0; x < LOCAL_MAP_SIZE; x++) {
 				// consider the turning penalty to prioritise moves in front of us
-				points.add(new Position(x, y, posx, posy, getScore(x, y) - getTurningPenalty(posx, posy, direction, x, y)));
+				int score = getScore(x, y) - getTurningPenalty(posx, posy, direction, x, y);
+				if (best == null || score > bestScore) {
+					best = new Position(x, y, x, y, score);
+					bestScore = score;
+				}
 			}
 		}
 		
-		// Find the most interesting point.
-		Position pointOfInterest = points.get(0);
-		for (int i = 1; i < points.size(); i++) {
-			Position next = points.get(i);
-			
-			if (pointOfInterest.getInterest() > next.getInterest()) {
-				pointOfInterest = next;
-			}
-		}
-		
-		return (new Position(pointOfInterest.getX(), pointOfInterest.getY(), pointOfInterest.getX(), pointOfInterest.getY(), pointOfInterest.getReward()));
+		// return the most interesting point
+		return best;
 	}
 
 	public static void main(String[] args) {

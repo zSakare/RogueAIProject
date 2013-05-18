@@ -61,7 +61,7 @@ public class WorldMap extends JPanel {
 	
 	/**
 	 * update the local map pieces with knowledge from the agent (expensive operation!)
-	 * We limit the operation to the dimensions given.
+	 * Limit updates to coordinates given
 	 * !!Max coordinates are inclusive!!
 	 * It is the responsibility of the caller to limit the max, and min coordinates
 	 * such that they do not try to update over the edge of the map.
@@ -84,6 +84,9 @@ public class WorldMap extends JPanel {
 		for (yy = miny; yy <= maxy; ++yy) {
 			for (xx = minx; xx <= maxx; ++xx) {
 				chr = agent.charAt(xx, yy);
+				if (chr == 'x') { // unexplored
+					continue;
+				}
 				piece = pieces[yy][xx];
 				if (piece == null) {
 					piece = new WorldPiece(this, (xx % 2) == (yy % 2), xx, yy);
@@ -122,8 +125,6 @@ public class WorldMap extends JPanel {
 		List<Position> pathPositions = agent.searchAStar(piece.x, piece.y, agent.getX(), agent.getY());
 		if (pathPositions == null) {
 			return;
-		} else {
-			System.out.println("Total Cost: " + pathPositions.size());
 		}
 		/* tag all the pieces on the path to the goal */
 		for (Position p : pathPositions) {

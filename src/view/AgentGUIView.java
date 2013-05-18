@@ -109,13 +109,8 @@ public class AgentGUIView implements IAgentView, IMovePanelSubscriber, KeyListen
 		// update everything
 		tiTurns.update();
 		
-		// update the world map with just the area around the agent
-		minx = Math.max(0, posx - Agent.VIEW_HALF_SIZE);
-		maxx = Math.min(Agent.LOCAL_MAP_SIZE - 1, posx + Agent.VIEW_HALF_SIZE);
-		miny = Math.max(0, posy - Agent.VIEW_HALF_SIZE);
-		maxy = Math.min(Agent.LOCAL_MAP_SIZE - 1, posy + Agent.VIEW_HALF_SIZE);
-					
-		wmWorld.update(minx, maxx, miny, maxy);
+		// update the world map with just the area explored so far
+		wmWorld.update(agent.getMinX(), agent.getMaxX(), agent.getMinY(), agent.getMaxY());
 
 		// scroll the character into view
 		cx = wmWorld.getCharacterX();

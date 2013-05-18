@@ -19,11 +19,12 @@ public class WorldPiece extends JPanel implements MouseListener {
 
 	char myType;
 	private JLabel lblIndicator;
+	private JLabel lblScore;
 	boolean mousedOver; // is this tile moused over?
 	Color tagged; // tagged by map this colour
 	boolean highlight; // grey/dkgrey alternating
 	WorldMap map;
-	
+	int score; // AI score of this piece
 	int x, y;
 	
 	public WorldPiece(WorldMap map, boolean highlight, int xx, int yy) {
@@ -39,11 +40,19 @@ public class WorldPiece extends JPanel implements MouseListener {
 			this.setBackground(Color.GRAY);
 		}
 		lblIndicator = new JLabel("...");
-		lblIndicator.setFont(new Font("Arial", Font.BOLD, 15));
+		lblIndicator.setFont(new Font("Arial", Font.BOLD, 20));
 		lblIndicator.setHorizontalAlignment(SwingConstants.CENTER);
 		lblIndicator.setForeground(Color.WHITE);
 	
 		this.add(lblIndicator, BorderLayout.CENTER);
+		
+		lblScore = new JLabel("...");
+		lblScore.setFont(new Font("Arial", Font.PLAIN, 10));
+		lblScore.setHorizontalAlignment(SwingConstants.CENTER);
+		lblScore.setForeground(Color.WHITE);
+		
+		this.add(lblScore, BorderLayout.PAGE_END);
+		
 		this.addMouseListener(this);
 		update();
 	}
@@ -55,6 +64,7 @@ public class WorldPiece extends JPanel implements MouseListener {
 	public void update() {
 		//System.out.println("WorldPiece at " + this.getX() + ", " + this.getY() + " updated to " + String.valueOf(myType) + " (" + (int)myType + ")");
 		lblIndicator.setText(String.valueOf(myType));
+		lblScore.setText(String.valueOf(score));
 		//lblIndicator.repaint();
 		if (tagged != null) {
 			this.setBackground(tagged);

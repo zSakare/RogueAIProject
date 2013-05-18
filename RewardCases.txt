@@ -14,9 +14,9 @@ Priorties:
 13 - dynamite = 60
 14 - axe = 50
 15 - key = 50
-16 - unexplored floor = 20
-17 - tree = 20
-18 - wall = 20
+16 - unexplored floor = 0 (rg - down from 20)
+17 - tree = 20 (rg - 0 if no axe/5 if dynamite)
+18 - wall = 20 (rg - 0 if no dynamite)
 19 - explored floor = 0
 20 - door (without key) = 0
 21 - Start position (without gold) = 0 (same as explored floor)

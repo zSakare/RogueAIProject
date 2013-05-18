@@ -18,14 +18,12 @@ public class MovePanel extends JPanel {
 	private JButton btnRight;
 	private JButton btnForward;
 	
+	private JButton btnAI; // ai single step
+	
 	private List<IMovePanelSubscriber> subscribers;
 	
 	public MovePanel(Agent agent) {
 		super(new GridLayout(3,3));
-		/* 0  1  2
-		 * 3  4  5
-		 * 6  7  8
-		 */
 		subscribers = new LinkedList<IMovePanelSubscriber>();
 		
 		this.setBackground(Color.DARK_GRAY);
@@ -54,6 +52,18 @@ public class MovePanel extends JPanel {
 			}
 		});
 		
+		btnAI = new JButton("AI Step");
+		btnAI.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent evt) {
+				notifyAI();
+			}
+		});
+		
+		/* 0  1  2
+		 * 3  4  5
+		 * 6  7  8
+		 */
 		
 		this.add(new JLabel("")); // 0
 		this.add(btnForward); // 1
@@ -62,27 +72,33 @@ public class MovePanel extends JPanel {
 		this.add(new JLabel("")); //4
 		this.add(btnRight); // 5
 		this.add(new JLabel("")); // 6
-		this.add(new JLabel("")); // 7
+		this.add(btnAI); // 7
 		this.add(new JLabel("")); // 8
 		
 		
 	}
 	
-	public void notifyLeft() {
+	private void notifyLeft() {
 		for (IMovePanelSubscriber sub : subscribers) {
 			sub.onLeft();
 		}
 	}
 	
-	public void notifyRight() {
+	private void notifyRight() {
 		for (IMovePanelSubscriber sub : subscribers) {
 			sub.onRight();
 		}
 	}
 	
-	public void notifyForward() {
+	private void notifyForward() {
 		for (IMovePanelSubscriber sub : subscribers) {
 			sub.onForward();
+		}
+	}
+	
+	private void notifyAI() {
+		for (IMovePanelSubscriber sub : subscribers) {
+			sub.onAIStep();
 		}
 	}
 	

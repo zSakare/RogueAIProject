@@ -20,10 +20,11 @@ public class WorldMap extends JPanel {
 	private Agent agent;
 	private WorldPiece [][] pieces;
 	
-	public static final int WORLDMAP_WIDTH = 3200;
-	public static final int WORLDMAP_HEIGHT = 3200;
+	public static final int WORLDMAP_WIDTH = 6400;
+	public static final int WORLDMAP_HEIGHT = 6400;
 	
 	private java.util.List<WorldPiece> pathPieces; 
+	private Position lastPOI;
 	
 	// ideally the pieces are square... make your decision
 	private static final int PIECE_WIDTH = WORLDMAP_WIDTH / Agent.LOCAL_MAP_SIZE; // width of pieces
@@ -41,6 +42,8 @@ public class WorldMap extends JPanel {
 		
 		// black colour to represent unexplored
 		this.setBackground(Color.BLACK);
+		
+		lastPOI = null;
 		
 		// initialise A* debugging list
 		pathPieces = new LinkedList<WorldPiece>();
@@ -67,6 +70,16 @@ public class WorldMap extends JPanel {
 		int xx, yy;
 		WorldPiece piece;
 		char chr;
+		Position agentPOI;
+		
+		agentPOI = agent.findPOI();
+		if (lastPOI != null && pieces[lastPOI.getCurrY()][lastPOI.getCurrX()] != null) {
+			pieces[lastPOI.getCurrY()][lastPOI.getCurrX()].setTagged(null);
+		}
+		if (agentPOI != null && pieces[agentPOI.getCurrY()][agentPOI.getCurrX()] != null) {
+			pieces[agentPOI.getCurrY()][agentPOI.getCurrX()].setTagged(Color.ORANGE);
+			lastPOI = agentPOI;
+		}
 		//System.out.println("Update: " + minx + "," + miny + " to " + maxx + "," + maxy);
 		for (yy = miny; yy <= maxy; ++yy) {
 			for (xx = minx; xx <= maxx; ++xx) {
@@ -78,7 +91,7 @@ public class WorldMap extends JPanel {
 					this.add(piece);
 					piece.setBounds(xx * PIECE_WIDTH, yy * PIECE_HEIGHT, PIECE_WIDTH, PIECE_HEIGHT);
 				}
-				
+				piece.score = agent.getScore(xx,  yy);
 				if (xx == agent.getX() && yy == agent.getY()) {
 					piece.myType = getCharacterForDirection(agent.getDirection());
 				} else if (xx == agent.getInitX() && yy == agent.getInitY()){

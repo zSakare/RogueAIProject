@@ -10,9 +10,10 @@ import javax.swing.*;
 import controller.IAgentController;
 
 import view.gui.*;
+import model.*;
 import logic.*;
 
-public class AgentGUIView implements IAgentView, IMovePanelSubscriber {
+public class AgentGUIView implements IAgentView, IMovePanelSubscriber, KeyListener {
 
 	Agent agent;
 	
@@ -139,6 +140,7 @@ public class AgentGUIView implements IAgentView, IMovePanelSubscriber {
 		JFrame frame = new JFrame("Agent 007");
 		frame.getContentPane().add(panel);
 		frame.addWindowListener(new WindowCloseManager());
+		frame.addKeyListener(this);
 		frame.pack();
 		frame.setVisible(true);
 		
@@ -174,6 +176,61 @@ public class AgentGUIView implements IAgentView, IMovePanelSubscriber {
 		notifyAction('F');
 		controller.waitForViewport();
 		onUpdate();
+	}
+	
+	public void onAIStep() {
+		// panel told us to take a step that the AI would...
+		// this belongs in a controller
+		Position poi = agent.findPOI();
+		// Get path to POI
+		List<Position> pathToPOI = agent.searchAStar(poi.getCurrX(), poi.getCurrY(), agent.getX(), agent.getY());
+		
+		// get the first step for the AI on this path
+		if (pathToPOI.size() > 1) {
+			Position nextPos = pathToPOI.get(1);
+			int [][] moveVectors = {{1,0},{0,-1},{-1,0},{0,1}}; // {{x,y} E N W S}
+			int requiredDirection = 0;
+			while (nextPos.getCurrX() != agent.getX() + moveVectors[requiredDirection][0] || nextPos.getCurrY() != agent.getY() + moveVectors[requiredDirection][1]) {
+				requiredDirection++;
+			}
+			/* TODO: fix this shit up - a little hacky */
+			if (agent.getDirection() == requiredDirection) {
+				notifyAction('F');
+			} else if (agent.getDirection() < requiredDirection && (requiredDirection - agent.getDirection()) <= 2) {
+				// if i must turn left, and it will take me at most than 2 turns to get there, turn left
+				notifyAction('L');
+			} else if ((agent.getDirection() - requiredDirection) <= 2){
+				notifyAction('R');
+			} else {
+				notifyAction('L');
+			}
+		}
+		
+		controller.waitForViewport();
+		onUpdate();
+	}
+
+	@Override
+	public void keyPressed(KeyEvent e) {
+		if (e.getKeyCode() == KeyEvent.VK_UP) {
+			onForward();
+		} else if (e.getKeyCode() == KeyEvent.VK_LEFT) {
+			onLeft();
+		} else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
+			onRight();
+		}
+	}
+
+	@Override
+	public void keyReleased(KeyEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void keyTyped(KeyEvent e) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

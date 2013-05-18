@@ -187,33 +187,25 @@ public class Agent {
 		} else if ((action == 'R') || (action == 'r')) {
 			direction = (direction + 3) % 4;
 		} else if ((action == 'F') || (action == 'f')) {
-			switch(direction) {
-			case NORTH:
-				if (canMoveInto(local_map[posy-1][posx])) {
-					--posy;
-				}
-				break;
-			case SOUTH:
-				if (canMoveInto(local_map[posy+1][posx])) {
-					++posy;
-				}
-				break;
-			case EAST:
-				if (canMoveInto(local_map[posy][posx+1])) {
-					++posx;
-				}
-				break;
-			case WEST:
-				if (canMoveInto(local_map[posy][posx-1])) {
-					--posx;
-				}
-				break;
-				default:
-					System.err.println("Unknown direction " + direction);
-					System.exit(0);
+			int [][] moveVectors = {{1,0},{0,-1},{-1,0},{0,1}}; // {{x,y} E N W S}
+			if (canMoveInto(local_map[posy+moveVectors[direction][1]][posx+moveVectors[direction][0]])) {
+				posx += moveVectors[direction][0];
+				posy += moveVectors[direction][1];
+				handleMoveInto(local_map[posy+moveVectors[direction][1]][posx+moveVectors[direction][0]]);
 			}
 		}
 	}
+	
+	/** handles moving into a certain character */
+	private void handleMoveInto(char c) {
+		switch (c) {
+		case 'g':
+			inventory.put('g', inventory.get('g') + 1);
+			break;
+			default:
+		}
+	}
+
 	/**
 	 * Parse a view
 	 * 
@@ -355,10 +347,12 @@ public class Agent {
 		queue.peek().setCost(0);
 		fCost.put(queue.peek(), (cost.get(queue.peek()) + queue.peek().absoluteDistanceFrom(goal)));
 		
+		Position current = null;
+		Position lastBest = null; // last best position explored
 		// A star!
 		while (!queue.isEmpty()) {
 			// Take the top element
-			Position current = queue.peek();
+			current = queue.peek();
 			if (current.equals(goal)) {
 				// Save the current state, finish the loop.
 				return pathFind(cameFrom, current);
@@ -388,10 +382,11 @@ public class Agent {
 						// Update costs.
 						cost.put(neighbour, potentialCost);
 						neighbour.setCost(potentialCost);
+						lastBest = neighbour;
 						fCost.put(neighbour, neighbour.absoluteDistanceFrom(goal));
 						if (!queue.contains(neighbour)) {
 							// TODO: Remove debug prints later.
-							System.out.println("Exploring: " + neighbour.getCurrX() + "," + neighbour.getCurrY() + " with cost: " + cost.get(neighbour));
+							//System.out.println("Exploring: " + neighbour.getCurrX() + "," + neighbour.getCurrY() + " with cost: " + cost.get(neighbour));
 							queue.add(neighbour);
 						}
 					}
@@ -400,7 +395,11 @@ public class Agent {
 		}
 		
 		// We haven't found a viable path to take.
-		return null;
+		if (lastBest != null) {
+			return pathFind(cameFrom, lastBest);
+		} else {
+			return null;
+		}
 	}
 
 	/**
@@ -462,66 +461,137 @@ public class Agent {
 	}
 
 	/**
+	 * Get the score for a certain position
+	 * @return The score of the given position
+	 */
+	public int getScore(int x, int y) {
+		
+		if (x == START_X && y == START_Y && inventory.get('g') > 0) {
+			// We have gold, add interest to returning to starting position.
+			return 100;
+		} else {
+			char atPosition = local_map[y][x];
+			switch (atPosition) {
+			case 'T':
+				// If we have a tree, it's more interesting if we have an axe.
+				if (inventory.get('a') > 0) {
+					return 70;
+				} else {
+					return 0;
+				}
+			case '*':
+				if (inventory.get('d') > 0) {
+					return 70;
+				} else {
+					return 0;
+				}
+			case 'd':
+				return 50;
+			case 'g':
+				return 100;
+			case 'a':
+				return 50;
+			case 'k':
+				return 50;
+			case 'x':
+				return -50;
+			case '~':
+				return -100;
+			case ' ':
+				// dependong on whether this cell is next to unexplored or no
+				if (hasNeighboursUnexplored(x, y)) {
+					return 20;
+				} else {
+					return 0;
+				}
+			case '-':
+				if (inventory.get('k') > 0) {
+					return 70;
+				} else {
+					return 0;
+				}
+			}
+		}
+		return 0;
+	}
+
+	/**
+	 * returns the number of neighbours that are unexplored for a cell
+	 * @param x
+	 * @param y
+	 * @return
+	 */
+	private boolean hasNeighboursUnexplored(int x, int y) {
+		// check left, right, up then down (with array bound checking)
+		return (x > 0 && local_map[y][x-1] == 'x') || (x < LOCAL_MAP_SIZE-1 && local_map[y][x+1] == 'x') || 
+				(y > 0 && local_map[y-1][x] == 'x') || (y < LOCAL_MAP_SIZE-1 && local_map[y+1][x] == 'x');
+	}
+	
+	/**
+	 * Returns the minimum number of turns required to get from a position to another position
+	 * @param xStart Initial X
+	 * @param yStart Initial Y
+	 * @param direction Initial Direction
+	 * @param xGoal Goal X
+	 * @param yGoal Goal Y
+	 * @return Minimum steps to get to goal
+	 */
+	private int getTurningPenalty(int xStart, int yStart, int direction, int xGoal, int yGoal) {
+		int turns = 0;
+		switch (direction) {
+		case EAST:
+			if (xGoal >= xStart && yStart == yGoal) { // straight line
+				turns = 0;
+			} else if (xGoal >= xStart) { // must turn right or left
+				turns = 1;
+			} else { // must turn around
+				turns = 2;
+			}
+			break;
+		case NORTH:
+			if (xGoal == xStart && yGoal <= yStart) { // straight line
+				turns = 0;
+			} else if (yGoal <= yStart) { // must turn right or left
+				turns = 1;
+			} else { // must turn around
+				turns = 2;
+			}
+			break;
+		case WEST:
+			if (xGoal <= xStart && yStart == yGoal) { // straight line
+				turns = 0;
+			} else if (xGoal <= xStart) { // must turn right or left
+				turns = 1;
+			} else { // must turn around
+				turns = 2;
+			}
+			break;	
+		case SOUTH:
+			if (xGoal == xStart && yGoal >= yStart) { // straight line
+				turns = 0;
+			} else if (yGoal >= yStart) { // must turn right or left
+				turns = 1;
+			} else { // must turn around
+				turns = 2;
+			}
+			break;
+		}
+		return turns;
+	}
+	/**
 	 * Helper function that finds the most interesting point on the map.
 	 * 
 	 * @return - an interesting point.
 	 */
-	private Position findPOI() {
+	public Position findPOI() {
 		// all points of interest to return.
 		List<Position> points = new ArrayList<Position>();
 		
-		if (inventory.get('g') > 0) {
-			// We have gold, add interest to returning to starting position.
-			points.add(new Position(START_X, START_Y, posx, posy, 100));
-		} else {
-			// Brute force search for interesting points.
-			for (int y = 0; y < LOCAL_MAP_SIZE; y++) {
-				for (int x = 0; x < LOCAL_MAP_SIZE; x++) {
-					switch (local_map[y][x]) {
-					case 'T':
-						// If we have a tree, it's more interesting if we have an axe.
-						if (inventory.get('a') > 0) {
-							points.add(new Position(x, y, posx, posy, 70));
-						} else {
-							points.add(new Position(x, y, posx, posy, 20));
-						}
-						break;
-					case '*':
-						if (inventory.get('d') > 0) {
-							points.add(new Position(x, y, posx, posy, 70));
-						} else {
-							points.add(new Position(x, y, posx, posy, 10));
-						}
-						break;
-					case 'd':
-						points.add(new Position(x, y, posx, posy, 50));
-						break;
-					case 'g':
-						points.add(new Position(x, y, posx, posy, 100));
-						break;
-					case 'a':
-						points.add(new Position(x, y, posx, posy, 50));
-						break;
-					case 'k':
-						points.add(new Position(x, y, posx, posy, 50));
-						break;
-					case 'x':
-						points.add(new Position(x, y, posx, posy, 20));
-						break;
-					case '~':
-						points.add(new Position(x, y, posx, posy, -100));
-						break;
-					case ' ':
-						points.add(new Position(x, y, posx, posy, 0));
-						break;
-					case '-':
-						if (inventory.get('k') > 0) {
-							points.add(new Position(x, y, posx, posy, 70));
-						} else {
-							points.add(new Position(x, y, posx, posy, 0));
-						}
-					}
-				}
+		// Brute force search for interesting points.
+		for (int y = miny; y <= maxx; y++) {
+			for (int x = minx; x < maxx; x++) {
+				// consider the turning penalty to prioritise moves in front of us
+				points.add(new Position(x, y, posx, posy, getScore(x, y) - getTurningPenalty(posx, posy, direction, x, y)));
 			}
 		}
 		
@@ -531,7 +601,6 @@ public class Agent {
 			Position next = points.get(i);
 			
 			if (pointOfInterest.getInterest() > next.getInterest()) {
-				System.out.println("Cost: " + pointOfInterest.getInterest() + " compared to: " + next.getInterest());
 				pointOfInterest = next;
 			}
 		}

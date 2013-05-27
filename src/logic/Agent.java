@@ -7,9 +7,6 @@ package logic;
  */
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -19,10 +16,22 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
 
-import controller.*;
-import model.*;
-import view.*;
+import model.Position;
+import view.AgentConsoleView;
+import view.AgentGUIView;
+import view.IAgentView;
+import controller.AgentConsoleController;
+import controller.IAgentController;
 
+// TODO: Immediate Goal
+/* 1. Cache a point of interest (path) when one is found.
+ * 2. If a greater reward is found after more of the map is revealed, replace current path.
+ */
+// TODO: Later Goals:
+/* 1. Consider how to build a plan (not just a path) to reach a location.
+ * 2. E.g. if a tree is blocking path, how to break open tree to get to gold.
+ * 3. Has to consider possible waste of items (blowing up random walls or trees).
+ */
 public class Agent {
 
 	private List<IAgentView> views; // list of all the views observing this agent

@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
 
+import model.Goal;
 import model.Position;
 import view.AgentConsoleView;
 import view.AgentGUIView;
@@ -71,8 +72,8 @@ public class Agent {
 	// next action to be given to the agent
 	private char giveAction = ' ';
 	
-	private Position goal; // current goal position
-	private List<Position> currentPath; // current path (to avoid continuously recalculating)
+	private Goal currentGoal; // current goal
+	private PriorityQueue<Goal> goals; // potential goals
 	
 	public Agent() {
 		views = new LinkedList<IAgentView>();
@@ -100,7 +101,9 @@ public class Agent {
 		
 		turnNumber = 0;
 		
-		currentPath = new LinkedList<Position>();
+		currentGoal = null;
+		
+		goals = new PriorityQueue<Goal>();
 		
 		// Populate inventory.
 		inventory.put('d', 0);
@@ -230,15 +233,34 @@ public class Agent {
 		// Rotate the view so that 0 = east, 1 = north etc (i.e. back into world space)
 		view = rotate_view(view, direction);
 
+		char piece;
+		int score;
 		last_view = view;
 		
 		// Now overlay the rotated view onto the global map
 		for (y = posy - VIEW_HALF_SIZE, yy = 0; y <= posy + VIEW_HALF_SIZE; ++y, ++yy) {
 			for (x = posx - VIEW_HALF_SIZE, xx = 0; x <= posx + VIEW_HALF_SIZE; ++x, ++xx) {
-				local_map[y][x] = view[yy][xx];
+				piece = view[yy][xx];
+				local_map[y][x] = piece;
 			}
 		}
 		
+		// Parse anything new that came in (i.e. beyond the min/max boundaries)
+		// This must be done after viewing.
+		// TODO test
+		for (y = posy - VIEW_HALF_SIZE; y <= posy + VIEW_HALF_SIZE; ++y) {
+			for (x = posx - VIEW_HALF_SIZE; x <= posx + VIEW_HALF_SIZE; ++x) {
+				if (y < miny || y > maxy || x < minx || x > maxx) {
+					score = getScore(x, y);
+					if (score > 0) {
+						goals.add(new Goal(x, y, local_map[y][x], score));
+						System.out.println("New goal: " + x + ", " + y + " [" + local_map[y][x] + "]: " + score);
+					}
+				}
+			}
+		}
+		
+		// process the local information as goals
 		minx = Math.max(0, Math.min(minx, posx - VIEW_HALF_SIZE));
 		maxx = Math.min(LOCAL_MAP_SIZE - 1, Math.max(maxx, posx + VIEW_HALF_SIZE + 1));
 		miny = Math.max(0, Math.min(miny, posy - VIEW_HALF_SIZE));
@@ -285,14 +307,10 @@ public class Agent {
 		return view_temp;
 	}
 
-	public Position getGoal() {
-		return goal;
+	public Goal getCurrentGoal() {
+		return currentGoal;
 	}
-	
-	public List<Position> getPath() {
-		return currentPath;
-	}
-	
+
 	public char get_action(char view[][]) {
 		/* Add later, commented out for gui view.
 		// Find interesting point (scan map) and put into PriQ.

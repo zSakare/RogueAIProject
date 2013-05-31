@@ -8,6 +8,7 @@ import java.util.List;
 import javax.swing.JPanel;
 
 import logic.Agent;
+import model.Goal;
 import model.Position;
 
 /**
@@ -24,7 +25,7 @@ public class WorldMap extends JPanel {
 	public static final int WORLDMAP_HEIGHT = 6400;
 	
 	private java.util.List<WorldPiece> pathPieces; 
-	private Position lastPOI;
+	private Goal lastPOI;
 	
 	// ideally the pieces are square... make your decision
 	private static final int PIECE_WIDTH = WORLDMAP_WIDTH / Agent.LOCAL_MAP_SIZE; // width of pieces
@@ -70,15 +71,17 @@ public class WorldMap extends JPanel {
 		int xx, yy;
 		WorldPiece piece;
 		char chr;
-		Position agentPOI;
+		Goal agentPOI;
 		
-		agentPOI = agent.findPOI();
-		if (lastPOI != null && pieces[lastPOI.getY()][lastPOI.getX()] != null) {
-			pieces[lastPOI.getY()][lastPOI.getX()].setTagged(null);
-		}
-		if (agentPOI != null && pieces[agentPOI.getY()][agentPOI.getX()] != null) {
-			pieces[agentPOI.getY()][agentPOI.getX()].setTagged(Color.ORANGE);
-			lastPOI = agentPOI;
+		agentPOI = agent.getCurrentGoal();
+		if (agentPOI != null) {
+			if (lastPOI != null && pieces[lastPOI.getY()][lastPOI.getX()] != null) {
+				pieces[lastPOI.getY()][lastPOI.getX()].setTagged(null);
+			}
+			if (agentPOI != null && pieces[agentPOI.getY()][agentPOI.getX()] != null) {
+				pieces[agentPOI.getY()][agentPOI.getX()].setTagged(Color.ORANGE);
+				lastPOI = agentPOI;
+			}
 		}
 		//System.out.println("Update: " + minx + "," + miny + " to " + maxx + "," + maxy);
 		for (yy = miny; yy <= maxy; ++yy) {

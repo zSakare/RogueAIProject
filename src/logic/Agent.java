@@ -183,8 +183,8 @@ public class Agent {
 	}
 	
 	/** returns whether a block can be moved into **/
-	public static boolean canMoveInto(char block) {
-		return (block != '*' && block != '-' && block != 'T' && block != 'x' && block != '~');
+	public boolean canMoveInto(char block) {
+		return (block != '*' && block != '-' && (block != 'T' || getItems('a') > 0) && block != 'x' && block != '~');
 	}
 	
 	/**
@@ -211,6 +211,11 @@ public class Agent {
 				posy += moveVectors[direction][1];
 				handleMoveInto(local_map[posy+moveVectors[direction][1]][posx+moveVectors[direction][0]].piece);
 			}
+		} else if ((action == 'C') || (action == 'c')) { // chop down
+			int [][] moveVectors = {{1,0},{0,-1},{-1,0},{0,1}}; // {{x,y} E N W S}
+			if (getItems('a') > 0 && local_map[posy+moveVectors[direction][1]][posx+moveVectors[direction][0]].piece == 'T') {
+				local_map[posy+moveVectors[direction][1]][posx+moveVectors[direction][0]].piece = ' ';
+			}
 		}
 	}
 	
@@ -218,8 +223,15 @@ public class Agent {
 	private void handleMoveInto(char c) {
 		switch (c) {
 		case 'g':
-			inventory.put('g', inventory.get('g') + 1);
+			inventory.put('g', getItems('g') + 1);
 			break;
+		case 'a':
+			inventory.put('a', getItems('a') + 1);
+			break;
+		case 'd':
+			inventory.put('d', getItems('d') + 1);
+			break;
+			
 			default:
 		}
 	}
@@ -248,24 +260,86 @@ public class Agent {
 		
 		// Parse anything new that came in (i.e. beyond the min/max boundaries)
 		// This must be done after viewing.
-		// TODO test
 		for (y = posy - VIEW_HALF_SIZE; y <= posy + VIEW_HALF_SIZE; ++y) {
 			for (x = posx - VIEW_HALF_SIZE; x <= posx + VIEW_HALF_SIZE; ++x) {
-				if (y < miny || y > maxy || x < minx || x > maxx) {
+				if ((y > miny && y <= maxy && x >= minx && x <= maxx)
+					&& local_map[y][x].piece != ' ') {
 					score = getScore(x, y);
-					if (score > 0) {
-						goals.add(new Goal(x, y, local_map[y][x].piece, score));
-						System.out.println("New goal: " + x + ", " + y + " [" + local_map[y][x] + "]: " + score);
+					if (score <= 0) continue; // dumb to waste processing on this
+					Goal g = new Goal(x, y, local_map[y][x].piece, score);
+					if (goals.contains(g)) {
+						goals.remove(g);
 					}
+					goals.add(g);
 				}
 			}
 		}
 		
-		// process the local information as goals
+		
 		minx = Math.max(0, Math.min(minx, posx - VIEW_HALF_SIZE));
 		maxx = Math.min(LOCAL_MAP_SIZE - 1, Math.max(maxx, posx + VIEW_HALF_SIZE + 1));
 		miny = Math.max(0, Math.min(miny, posy - VIEW_HALF_SIZE));
 		maxy = Math.min(LOCAL_MAP_SIZE - 1, Math.max(maxy, posy + VIEW_HALF_SIZE + 1));
+		
+		// process the local information as goals
+		// No goal, or already at goal - find a new goal
+		if (currentGoal == null || (posx == currentGoal.getX() && posy == currentGoal.getY())) {
+			updateGoals();
+			currentGoal = findGoal();
+		}
+	}
+	
+	/**
+	 * update all local goal scores
+	 */
+	private void updateGoals() {
+		int score;
+		PriorityQueue<Goal> newGoals = new PriorityQueue<Goal>();
+		for (Goal g : goals) {
+			score = getScore(g.getX(), g.getY());
+			g.setScore(score);
+			newGoals.add(g);
+		}
+		goals = newGoals;
+	}
+	private Goal findGoal() {
+		Goal answer = null;
+		// find exploring cell
+		PriorityQueue<Goal> explorable = new PriorityQueue<Goal>();
+
+		// Brute force search for interesting points in our window of explored area.
+		for (int y = miny; y <= maxy; y++) {
+			for (int x = minx; x <= maxx; x++) {
+				if (local_map[y][x].piece == ' ') {
+					// consider the turning penalty to prioritise moves in front of us
+					int score = getScore(x, y) - getTurningPenalty(posx, posy, direction, x, y);
+					explorable.add(new Goal(x, y, local_map[y][x].piece, score));
+				}
+			}
+		}
+		// Put in any entries from our spotted goal list that we can achieve easily
+		for (Goal g : goals) {
+			if (g.isAchievable(this)) {
+				System.out.println("Able to achieve goal " + g);
+				explorable.add(g);
+			} else {
+				System.out.println("Unable to achieve goal " + g);
+			}
+		}
+		
+		// pop down until we find a pathable explorable goal
+		while (explorable.size() > 0) {
+			Goal head = explorable.poll();
+			List<Position> path = searchAStar(head.getX(), head.getY(), posx, posy);
+			if (path != null) {
+				head.setPath(path);
+				answer = head;
+				break;
+			}
+		}
+		
+		
+		return answer;
 	}
 	
 	// rotate a view into north direction (world space) given the existing
@@ -310,6 +384,11 @@ public class Agent {
 
 	public Goal getCurrentGoal() {
 		return currentGoal;
+	}
+	
+	public int getItems(char item) {
+		Integer itm = inventory.get(item);
+		return itm != null ? itm.intValue() : 0;
 	}
 
 	public char get_action(char view[][]) {
@@ -421,8 +500,6 @@ public class Agent {
 						neighbour.setCost(potentialCost);
 						neighbour.setFcost(neighbour.absoluteDistanceFrom(goal));
 						if (!queue.contains(neighbour)) {
-							// TODO: Remove debug prints later.
-							//System.out.println("Exploring: " + neighbour.getCurrX() + "," + neighbour.getCurrY() + " with cost: " + cost.get(neighbour));
 							queue.add(neighbour);
 						}
 					}
@@ -446,12 +523,12 @@ public class Agent {
 		// List of legal positions.
 		List<Position> legalPositions = new ArrayList<Position>();
 		
-		// Checking we do not go out of bounds.
+		// Checking we do not go out of bounds or into walls.
 		for (int [] vector : moveVectors) {
 			int nx = current.getX() + vector[0];
 			int ny = current.getY() + vector[1];
 			if (nx >= 0 && nx < LOCAL_MAP_SIZE && ny >= 0 && ny < LOCAL_MAP_SIZE
-					&& Agent.canMoveInto(local_map[ny][nx].piece)) {
+					&& canMoveInto(local_map[ny][nx].piece)) {
 				legalPositions.add(local_map[ny][nx]);
 			}
 		}
@@ -468,16 +545,9 @@ public class Agent {
 	private List<Position> pathFind(Position current) {
 		LinkedList<Position> path = new LinkedList<Position>();
 		Position p = current;
-		int c = 0;
 		while (p != null) {
-			path.addLast(p);
+			path.addFirst(p);
 			p = p.getParent();
-			c++;
-			System.out.println(p);
-			if (c > 1000) {
-				System.err.println("whoops");
-				System.exit(1);
-			}
 		}
 		return path;
 	}
@@ -499,7 +569,7 @@ public class Agent {
 				if (inventory.get('a') > 0) {
 					return 70;
 				} else {
-					return 0;
+					return 1;
 				}
 			case '*':
 				if (inventory.get('d') > 0) {
@@ -531,7 +601,7 @@ public class Agent {
 				if (inventory.get('k') > 0) {
 					return 70;
 				} else {
-					return 0;
+					return 1;
 				}
 			}
 		}
@@ -611,29 +681,6 @@ public class Agent {
 			break;
 		}
 		return turns;
-	}
-	/**
-	 * Helper function that finds the most interesting point on the map.
-	 * 
-	 * @return - an interesting point.
-	 */
-	public Position findPOI() {
-		Position best = null; // best position so far
-		int bestScore = -1; // score for best position
-		// Brute force search for interesting points in our window of explored area.
-		for (int y = 0; y < LOCAL_MAP_SIZE; y++) {
-			for (int x = 0; x < LOCAL_MAP_SIZE; x++) {
-				// consider the turning penalty to prioritise moves in front of us
-				int score = getScore(x, y) - getTurningPenalty(posx, posy, direction, x, y);
-				if (best == null || score > bestScore) {
-					best = new Position(x, y);
-					bestScore = score;
-				}
-			}
-		}
-		
-		// return the most interesting point
-		return best;
 	}
 
 	public static void main(String[] args) {

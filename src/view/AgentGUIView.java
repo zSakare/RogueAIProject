@@ -1,17 +1,33 @@
 package view;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.util.LinkedList;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.List;
+import java.util.TimerTask;
 
-import javax.swing.*;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.ScrollPaneConstants;
+import java.util.Timer;
 
+import logic.Agent;
+import model.Goal;
+import model.Position;
+import view.gui.IMovePanelSubscriber;
+import view.gui.MovePanel;
+import view.gui.TurnIndicator;
+import view.gui.WorldMap;
 import controller.IAgentController;
-
-import view.gui.*;
-import model.*;
-import logic.*;
 
 public class AgentGUIView implements IAgentView, IMovePanelSubscriber, KeyListener {
 
@@ -104,7 +120,6 @@ public class AgentGUIView implements IAgentView, IMovePanelSubscriber, KeyListen
 
 	@Override
 	public void onUpdate(int posx, int posy) {
-		int minx, maxx, miny, maxy;
 		int cx, cy;
 		// update everything
 		tiTurns.update();
@@ -174,23 +189,71 @@ public class AgentGUIView implements IAgentView, IMovePanelSubscriber, KeyListen
 	}
 	
 	public void onAIStep() {
+		int ctr = 5;
+		Timer t = new Timer();
+	      t.scheduleAtFixedRate(new TimerTask()   
+	        {  
+	            int count = 0;  
+	  
+	            public void run()   
+	            {  
+	            	step();
+	                count ++;         
+	                          
+	                if(count == 1500)   
+	                    this.cancel();
+	            }   
+	                  
+	        }, 10, 25);   
+	}
+	public void step() {
 		// panel told us to take a step that the AI would...
 		// this belongs in a controller
-		Position poi = agent.findPOI();
+		Goal goal = agent.getCurrentGoal();
+		if (goal == null) { return; };
 		// Get path to POI
-		List<Position> pathToPOI = agent.searchAStar(poi.getX(), poi.getY(), agent.getX(), agent.getY());
+		List<Position> pathToPOI = goal.getPath();
 		
 		// get the first step for the AI on this path
 		if (pathToPOI.size() > 1) {
-			Position nextPos = pathToPOI.get(1);
+			Position currentPos = new Position(agent.getX(), agent.getY());
+			Position nextPos = goal.getPositionAfter(currentPos);
+			
 			int [][] moveVectors = {{1,0},{0,-1},{-1,0},{0,1}}; // {{x,y} E N W S}
+			/*System.out.println("Current: " + currentPos + ", next: " + nextPos);
+			for (Position p : pathToPOI) {
+				System.out.println(p);
+			}*/
 			int requiredDirection = 0;
+			int direction = agent.getDirection();
+			char inFront = agent.charAt(agent.getX() + moveVectors[direction][0], agent.getY() + moveVectors[direction][1]);
 			while (nextPos.getX() != agent.getX() + moveVectors[requiredDirection][0] || nextPos.getY() != agent.getY() + moveVectors[requiredDirection][1]) {
 				requiredDirection++;
 			}
 			/* TODO: fix this shit up - a little hacky */
 			if (agent.getDirection() == requiredDirection) {
-				notifyAction('F');
+				char action = 'x'; // x by default (fatal)
+				switch (inFront) {
+					case ' ':
+					case 'a': // axe
+					case 'g': // gold
+					action = 'F';
+					break;
+					case 'T': // tree
+						if (agent.getItems('a') > 0) {
+							action = 'C'; // chop down ya
+						} else {
+							action = 'x';
+						}
+						break;
+					default:
+						action = 'x';
+				}
+				if (action == 'x') {
+					System.err.println("AI tried to move into something unexpected... (" + inFront + ")");
+					action = 'L';
+				}
+				notifyAction(action);
 			} else if (agent.getDirection() < requiredDirection && (requiredDirection - agent.getDirection()) <= 2) {
 				// if i must turn left, and it will take me at most than 2 turns to get there, turn left
 				notifyAction('L');
@@ -199,6 +262,8 @@ public class AgentGUIView implements IAgentView, IMovePanelSubscriber, KeyListen
 			} else {
 				notifyAction('L');
 			}
+		} else {
+			notifyAction('L');
 		}
 		
 		controller.waitForViewport();

@@ -72,7 +72,8 @@ public class Position implements Comparable<Position> {
 	public int compareTo(Position o) {
 		if (o != null) {
 			Position position = (Position) o;
-			return this.getCost().compareTo(position.getCost());
+			return Integer.compare(this.fcost, position.fcost);
+			//return this.getCost().compareTo(position.getCost());
 		}
 		
 		return 0;

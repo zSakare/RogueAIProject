@@ -3,6 +3,8 @@ package model;
 import java.util.LinkedList;
 import java.util.List;
 
+import logic.Agent;
+
 public class Goal implements Comparable<Goal> {
 	
 	private int x;
@@ -21,9 +23,29 @@ public class Goal implements Comparable<Goal> {
 		this.score = score;
 	}
 	
+	/**
+	 * Returns whether agent can achieve this goal
+	 * @param a
+	 * @return
+	 */
+	public boolean isAchievable(Agent a) {
+		switch (type) {
+		case 'T':
+			if (a.getItems('a') > 0) {
+				return true;
+			}
+		case '*':
+			return a.getItems('d') >= requiredDynamite;
+
+		default:
+				return true;
+		}
+		
+	}
+	
 	@Override
 	public int compareTo(Goal g) {
-		return score - g.getScore();
+		return g.getScore() - score;
 	}
 
 	public int getX() {
@@ -74,4 +96,32 @@ public class Goal implements Comparable<Goal> {
 		this.score = score;
 	}
 	
+	/**
+	 * Try to find the position that would come after the given position.
+	 * @param p
+	 * @return next position
+	 */
+	public Position getPositionAfter(Position p) {
+		int index = path.indexOf(p);
+		if (index == -1 || index == path.size() - 1) {
+			return null;
+		} else {
+			return path.get(index + 1);
+		}
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if (o.getClass() == this.getClass()) {
+			Goal g = (Goal)o;
+			return (g.x == x && g.y == y);
+		} else {
+			return false;
+		}
+	}
+	
+	@Override
+	public String toString() { 
+		return "'" + type + "' @ [" + x + "," + y + "] (" + score + ")";
+	}
 }

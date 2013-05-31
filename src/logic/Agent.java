@@ -37,7 +37,7 @@ public class Agent {
 
 	private List<IAgentView> views; // list of all the views observing this agent
 	
-	private char local_map[][]; // our local representation of the map
+	private Position local_map[][]; // our local representation of the map
 
 	private char last_view[][]; // last view received by server
 	
@@ -78,14 +78,15 @@ public class Agent {
 	public Agent() {
 		views = new LinkedList<IAgentView>();
 		
-		local_map = new char[LOCAL_MAP_SIZE][];
+		local_map = new Position[LOCAL_MAP_SIZE][];
 		for (int i = 0; i < LOCAL_MAP_SIZE; ++i) {
-			local_map[i] = new char[LOCAL_MAP_SIZE];
+			local_map[i] = new Position[LOCAL_MAP_SIZE];
 		}
 
 		for (int y = 0; y < LOCAL_MAP_SIZE; ++y) {
 			for (int x = 0; x < LOCAL_MAP_SIZE; ++x) {
-				local_map[y][x] = 'x'; // x represents unexplored
+				local_map[y][x] = new Position(x, y);
+				local_map[y][x].piece = 'x'; // x represents unexplored
 				// System.out.print(String.valueOf(local_map[x][y]) + " ");
 			}
 			// System.out.println();
@@ -174,7 +175,7 @@ public class Agent {
 	}
 	// Get the character at the given position
 	public char charAt(int x, int y) {
-		return local_map[y][x];
+		return local_map[y][x].piece;
 	}
 	
 	public int getTurnNumber() {
@@ -205,10 +206,10 @@ public class Agent {
 			direction = (direction + 3) % 4;
 		} else if ((action == 'F') || (action == 'f')) {
 			int [][] moveVectors = {{1,0},{0,-1},{-1,0},{0,1}}; // {{x,y} E N W S}
-			if (canMoveInto(local_map[posy+moveVectors[direction][1]][posx+moveVectors[direction][0]])) {
+			if (canMoveInto(local_map[posy+moveVectors[direction][1]][posx+moveVectors[direction][0]].piece)) {
 				posx += moveVectors[direction][0];
 				posy += moveVectors[direction][1];
-				handleMoveInto(local_map[posy+moveVectors[direction][1]][posx+moveVectors[direction][0]]);
+				handleMoveInto(local_map[posy+moveVectors[direction][1]][posx+moveVectors[direction][0]].piece);
 			}
 		}
 	}
@@ -241,7 +242,7 @@ public class Agent {
 		for (y = posy - VIEW_HALF_SIZE, yy = 0; y <= posy + VIEW_HALF_SIZE; ++y, ++yy) {
 			for (x = posx - VIEW_HALF_SIZE, xx = 0; x <= posx + VIEW_HALF_SIZE; ++x, ++xx) {
 				piece = view[yy][xx];
-				local_map[y][x] = piece;
+				local_map[y][x].piece = piece;
 			}
 		}
 		
@@ -253,7 +254,7 @@ public class Agent {
 				if (y < miny || y > maxy || x < minx || x > maxx) {
 					score = getScore(x, y);
 					if (score > 0) {
-						goals.add(new Goal(x, y, local_map[y][x], score));
+						goals.add(new Goal(x, y, local_map[y][x].piece, score));
 						System.out.println("New goal: " + x + ", " + y + " [" + local_map[y][x] + "]: " + score);
 					}
 				}
@@ -364,65 +365,61 @@ public class Agent {
 		Set<Position> explored = new HashSet<Position>();
 		
 		// Remember each position's successor.
-		Map<Position, Position> cameFrom = new HashMap<Position, Position>();
+		// no need for this, use references
+		//Map<Position, Position> cameFrom = new HashMap<Position, Position>();
 		
 		// Create the goal state based on params.
-		Position goal = new Position(goalX, goalY, goalX, goalY, 0);
+		Position goal = new Position(goalX, goalY);
 		
 		// Unpathable goal do not bother searching or we will cause an infinite loop.
-		if (!canMoveThrough(local_map[goalY][goalX])) {
+		if (!canMoveThrough(local_map[goalY][goalX].piece)) {
 			return null;
 		}
 		
 		// Add the current position.
-		queue.add(new Position(goal.getX(), goal.getY(), currentX, currentY, 20));
+		Position startPosition = new Position(currentX, currentY);
+		queue.add(startPosition);
 		
-		// Mark the initial scores.
-		Map<Position, Integer> cost = new HashMap<Position, Integer>();
-		// Predicted cost.
-		Map<Position, Integer> fCost = new HashMap<Position, Integer>();
-		 
-		cost.put(queue.peek(), 0);
-		queue.peek().setCost(0);
-		fCost.put(queue.peek(), (cost.get(queue.peek()) + queue.peek().absoluteDistanceFrom(goal)));
+		startPosition.setCost(0);		
+		startPosition.setFcost( startPosition.absoluteDistanceFrom(goal));
 		
+		HashSet<Position> seen = new HashSet<Position>();
 		Position current = null;
-		Position lastBest = null; // last best position explored
+		
 		// A star!
 		while (!queue.isEmpty()) {
 			// Take the top element
-			current = queue.peek();
+			current = queue.poll();
 			if (current.equals(goal)) {
 				// Save the current state, finish the loop.
-				return pathFind(cameFrom, current);
+				return pathFind(current);
 			}
 			
 			// Remove the element from the queue and add it to our explored set.
-			explored.add(queue.remove());
+			explored.add(current);
 			
 			// Get all possible next moves.
 			List<Position> neighbours = getLegalNeighbours(current);
-			
+
 			// Iterate through all next possible moves, find new, unexplored moves to explore.
 			if (neighbours != null) {
 				for (Position neighbour : neighbours) {
-					int potentialCost = cost.get(current) + neighbour.absoluteDistanceFrom(current);
-					if (!cost.containsKey(neighbour)) {
-						cost.put(neighbour, potentialCost);
+					int potentialCost = current.getCost() + neighbour.absoluteDistanceFrom(current);
+					if (!seen.contains(neighbour)) { // if (neighbour has no cost) !neighbour.getCost()) {
+						seen.add(neighbour);
+						neighbour.setCost(potentialCost);
 					}
 					if (explored.contains(neighbour)) {
-						if (potentialCost >= cost.get(neighbour)) {
+						if (potentialCost >= neighbour.getCost()) {
 							// ignore the neighbour since we've already explored it from another path
 							// and the new path to the neighbour isn't any better.
 						}
-					} else if (!queue.contains(neighbour) || potentialCost < cost.get(neighbour)) {
+					} else if (!queue.contains(neighbour) || potentialCost < neighbour.getCost()) {
 						// Map where we came from (to pathfind).
-						cameFrom.put(neighbour, current);
+						neighbour.setParent(current);
 						// Update costs.
-						cost.put(neighbour, potentialCost);
 						neighbour.setCost(potentialCost);
-						lastBest = neighbour;
-						fCost.put(neighbour, neighbour.absoluteDistanceFrom(goal));
+						neighbour.setFcost(neighbour.absoluteDistanceFrom(goal));
 						if (!queue.contains(neighbour)) {
 							// TODO: Remove debug prints later.
 							//System.out.println("Exploring: " + neighbour.getCurrX() + "," + neighbour.getCurrY() + " with cost: " + cost.get(neighbour));
@@ -434,13 +431,11 @@ public class Agent {
 		}
 		
 		// We haven't found a viable path to take.
-		if (lastBest != null) {
-			return pathFind(cameFrom, lastBest);
-		} else {
-			return null;
-		}
+		return null;
 	}
-
+	
+	static final int [][] moveVectors = {{1,0},{0,-1},{-1,0},{0,1}}; // {{x,y} E N W S}
+	
 	/**
 	 * Helper function to return a list of legal positions to move into.
 	 * 
@@ -452,28 +447,12 @@ public class Agent {
 		List<Position> legalPositions = new ArrayList<Position>();
 		
 		// Checking we do not go out of bounds.
-		if (current.getCurrX() != 0) {
-			if (canMoveInto(local_map[current.getCurrY()][current.getCurrX()-1])) {
-				legalPositions.add(new Position(current.getX(), current.getY(), current.getCurrX()-1, current.getCurrY(), current.getReward()));
-			}
-		}
-		
-		if (current.getCurrX() != LOCAL_MAP_SIZE-1) {
-			if (canMoveInto(local_map[current.getCurrY()][current.getCurrX()+1])) {
-				legalPositions.add(new Position(current.getX(), current.getY(), current.getCurrX()+1, current.getCurrY(), current.getReward()));
-			}
-		}
-		
-		// Checking we do not go out of bounds.
-		if (current.getCurrY() != 0) {
-			if (canMoveInto(local_map[current.getCurrY()-1][current.getCurrX()])) {
-				legalPositions.add(new Position(current.getX(), current.getY(), current.getCurrX(), current.getCurrY()-1, current.getReward()));
-			}
-		}
-		
-		if (current.getCurrY() != LOCAL_MAP_SIZE-1) {
-			if (canMoveInto(local_map[current.getCurrY()+1][current.getCurrX()])) {
-				legalPositions.add(new Position(current.getX(), current.getY(), current.getCurrX(), current.getCurrY()+1, current.getReward()));
+		for (int [] vector : moveVectors) {
+			int nx = current.getX() + vector[0];
+			int ny = current.getY() + vector[1];
+			if (nx >= 0 && nx < LOCAL_MAP_SIZE && ny >= 0 && ny < LOCAL_MAP_SIZE
+					&& Agent.canMoveInto(local_map[ny][nx].piece)) {
+				legalPositions.add(local_map[ny][nx]);
 			}
 		}
 		
@@ -481,22 +460,26 @@ public class Agent {
 	}
 
 	/**
-	 * Helper function that recursively finds the path taken by the nodes.
+	 * Helper function that iteratively finds the path taken by the nodes.
 	 * 
-	 * @param cameFrom - Map of child positions to parent positions
 	 * @param current - current position to back track
 	 * @return - the path taken to reach goal.
 	 */
-	private List<Position> pathFind(Map<Position, Position> cameFrom, Position current) {
-		if (cameFrom.containsKey(current)) {
-			List<Position> pathToTake = pathFind(cameFrom, cameFrom.get(current));
-			pathToTake.add(current);
-			return pathToTake;
-		} else {
-			List<Position> pathToTake = new ArrayList<Position>();
-			pathToTake.add(current);
-			return pathToTake;
+	private List<Position> pathFind(Position current) {
+		LinkedList<Position> path = new LinkedList<Position>();
+		Position p = current;
+		int c = 0;
+		while (p != null) {
+			path.addLast(p);
+			p = p.getParent();
+			c++;
+			System.out.println(p);
+			if (c > 1000) {
+				System.err.println("whoops");
+				System.exit(1);
+			}
 		}
+		return path;
 	}
 
 	/**
@@ -509,7 +492,7 @@ public class Agent {
 			// We have gold, add interest to returning to starting position.
 			return 100;
 		} else {
-			char atPosition = local_map[y][x];
+			char atPosition = local_map[y][x].piece;
 			switch (atPosition) {
 			case 'T':
 				// If we have a tree, it's more interesting if we have an axe.
@@ -574,8 +557,8 @@ public class Agent {
 	 */
 	private boolean hasNeighboursUnexplored(int x, int y) {
 		// check left, right, up then down (with array bound checking)
-		return (x > 0 && local_map[y][x-1] == 'x') || (x < LOCAL_MAP_SIZE-1 && local_map[y][x+1] == 'x') || 
-				(y > 0 && local_map[y-1][x] == 'x') || (y < LOCAL_MAP_SIZE-1 && local_map[y+1][x] == 'x');
+		return (x > 0 && local_map[y][x-1].piece == 'x') || (x < LOCAL_MAP_SIZE-1 && local_map[y][x+1].piece == 'x') || 
+				(y > 0 && local_map[y-1][x].piece == 'x') || (y < LOCAL_MAP_SIZE-1 && local_map[y+1][x].piece == 'x');
 	}
 	
 	/**
@@ -643,7 +626,7 @@ public class Agent {
 				// consider the turning penalty to prioritise moves in front of us
 				int score = getScore(x, y) - getTurningPenalty(posx, posy, direction, x, y);
 				if (best == null || score > bestScore) {
-					best = new Position(x, y, x, y, score);
+					best = new Position(x, y);
 					bestScore = score;
 				}
 			}

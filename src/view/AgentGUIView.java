@@ -178,14 +178,14 @@ public class AgentGUIView implements IAgentView, IMovePanelSubscriber, KeyListen
 		// this belongs in a controller
 		Position poi = agent.findPOI();
 		// Get path to POI
-		List<Position> pathToPOI = agent.searchAStar(poi.getCurrX(), poi.getCurrY(), agent.getX(), agent.getY());
+		List<Position> pathToPOI = agent.searchAStar(poi.getX(), poi.getY(), agent.getX(), agent.getY());
 		
 		// get the first step for the AI on this path
 		if (pathToPOI.size() > 1) {
 			Position nextPos = pathToPOI.get(1);
 			int [][] moveVectors = {{1,0},{0,-1},{-1,0},{0,1}}; // {{x,y} E N W S}
 			int requiredDirection = 0;
-			while (nextPos.getCurrX() != agent.getX() + moveVectors[requiredDirection][0] || nextPos.getCurrY() != agent.getY() + moveVectors[requiredDirection][1]) {
+			while (nextPos.getX() != agent.getX() + moveVectors[requiredDirection][0] || nextPos.getY() != agent.getY() + moveVectors[requiredDirection][1]) {
 				requiredDirection++;
 			}
 			/* TODO: fix this shit up - a little hacky */

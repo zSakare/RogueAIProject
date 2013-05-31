@@ -73,11 +73,11 @@ public class WorldMap extends JPanel {
 		Position agentPOI;
 		
 		agentPOI = agent.findPOI();
-		if (lastPOI != null && pieces[lastPOI.getCurrY()][lastPOI.getCurrX()] != null) {
-			pieces[lastPOI.getCurrY()][lastPOI.getCurrX()].setTagged(null);
+		if (lastPOI != null && pieces[lastPOI.getY()][lastPOI.getX()] != null) {
+			pieces[lastPOI.getY()][lastPOI.getX()].setTagged(null);
 		}
-		if (agentPOI != null && pieces[agentPOI.getCurrY()][agentPOI.getCurrX()] != null) {
-			pieces[agentPOI.getCurrY()][agentPOI.getCurrX()].setTagged(Color.ORANGE);
+		if (agentPOI != null && pieces[agentPOI.getY()][agentPOI.getX()] != null) {
+			pieces[agentPOI.getY()][agentPOI.getX()].setTagged(Color.ORANGE);
 			lastPOI = agentPOI;
 		}
 		//System.out.println("Update: " + minx + "," + miny + " to " + maxx + "," + maxy);
@@ -129,7 +129,7 @@ public class WorldMap extends JPanel {
 		/* tag all the pieces on the path to the goal */
 		for (Position p : pathPositions) {
 			/* tag the piece */
-			WorldPiece pc = pieces[p.getCurrY()][p.getCurrX()];
+			WorldPiece pc = pieces[p.getY()][p.getX()];
 			if (pc != null) {
 				pc.setTagged(Color.GREEN);
 				pathPieces.add(pc);

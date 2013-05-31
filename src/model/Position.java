@@ -7,20 +7,20 @@ package model;
 public class Position implements Comparable<Position> {
 	private int x;
 	private int y;
-	private int currX;
-	private int currY;
-	private int reward;
 	private int cost;
+	private int fcost;
+	private Position parent;
+	public char piece;
 	
-	public Position(int x, int y, int currX, int currY, int reward) {
+	public Position(int x, int y) {
 		this.setX(x);
 		this.setY(y);
-		this.setCurrX(currX);
-		this.setCurrY(currY);
-		this.setReward(reward);
 		setCost(0);
+		setFcost(0);
+		this.piece = ' ';
 	}
 
+	
 	public int getX() {
 		return x;
 	}
@@ -37,6 +37,14 @@ public class Position implements Comparable<Position> {
 		this.y = y;
 	}
 
+	public Position getParent() {
+		return parent;
+	}
+	
+	public void setParent(Position parent) {
+		this.parent = parent;
+	}
+	
 	public int[] getCoords() {
 		int[] coords = new int[2];
 		coords[0] = x;
@@ -45,47 +53,15 @@ public class Position implements Comparable<Position> {
 		return coords;
 	}
 
-	public int getCurrX() {
-		return currX;
-	}
-
-	public void setCurrX(int currX) {
-		this.currX = currX;
-	}
-
-	public int getCurrY() {
-		return currY;
-	}
-
-	public void setCurrY(int currY) {
-		this.currY = currY;
-	}
-
-	public int getReward() {
-		return reward;
-	}
-
-	public void setReward(int reward) {
-		this.reward = reward;
-	}
-	
-	/**
-	 * Get the absolute value of the distance of the point from our current position.
-	 * 
-	 * @return - the absolute distance.
-	 */
-	public Integer getAbsoluteDistance() {
-		return (int) Math.sqrt(Math.pow((currX - x), 2) + Math.pow((currY - y), 2));
-	}
 	
 	/**
 	 * Gets how interesting the position is.
 	 * 
 	 * @return - how interesting the object is. Based on distance and reward.
 	 */
-	public Integer getInterest() {
+	/*public Integer getInterest() {
 		return (int) getAbsoluteDistance() - getReward();
-	}
+	}*/
 	
 	/**
 	 * Comparison function for priority queue.
@@ -102,6 +78,10 @@ public class Position implements Comparable<Position> {
 		return 0;
 	}
 	
+	@Override
+	public String toString() { 
+		return "[" + x + "," + y + "]";
+	}
 	/**
 	 * Object equals function.
 	 */
@@ -111,9 +91,7 @@ public class Position implements Comparable<Position> {
 		if (o != null) {
 			Position position = (Position) o;
 			if (position.x == this.x 
-					&& position.y == this.y
-					&& position.currX == this.currX
-					&& position.currY == this.currY) {
+					&& position.y == this.y) {
 				equal = true;
 			}
 		}
@@ -122,14 +100,14 @@ public class Position implements Comparable<Position> {
 	}
 
 	public Integer absoluteDistanceFrom(Position positionFrom) {
-		return (int) Math.sqrt(Math.pow(this.currX - positionFrom.currX, 2) + Math.pow(this.currY - positionFrom.currY, 2));
+		return (int) Math.sqrt(Math.pow(this.x - positionFrom.x, 2) + Math.pow(this.y - positionFrom.y, 2));
 	}
 	
 	/**
 	 * Hash for hashset/hashmap.
 	 */
 	public int hashCode() {
-		return x + y + currX + currY;
+		return x + 160 * y;
 	}
 
 	public Integer getCost() {
@@ -138,5 +116,13 @@ public class Position implements Comparable<Position> {
 
 	public void setCost(int cost) {
 		this.cost = cost;
+	}
+
+	public int getFcost() {
+		return fcost;
+	}
+
+	public void setFcost(int fcost) {
+		this.fcost = fcost;
 	}
 }

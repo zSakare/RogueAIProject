@@ -188,23 +188,27 @@ public class AgentGUIView implements IAgentView, IMovePanelSubscriber, KeyListen
 		onUpdate();
 	}
 	
-	public void onAIStep() {
-		int ctr = 5;
+	public void onAIStep(int moves) {
 		Timer t = new Timer();
-	      t.scheduleAtFixedRate(new TimerTask()   
-	        {  
-	            int count = 0;  
-	  
-	            public void run()   
-	            {  
-	            	step();
-	                count ++;         
-	                          
-	                if(count == 1500)   
-	                    this.cancel();
-	            }   
-	                  
-	        }, 10, 25);   
+	      t.scheduleAtFixedRate(new StepTimer(this, moves), 10, 25);   
+	}
+	
+	private class StepTimer extends TimerTask {
+		int moves;
+		AgentGUIView agent;
+		int count = 0;  
+		public StepTimer(AgentGUIView agent, int moves) {
+			this.moves = moves;
+			this.agent = agent;
+		}
+		
+		public void run() {
+			agent.step();
+			count ++;         
+			
+			if(count == moves)   
+				this.cancel();
+		}   
 	}
 	public void step() {
 		// panel told us to take a step that the AI would...

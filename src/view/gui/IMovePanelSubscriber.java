@@ -11,5 +11,5 @@ public interface IMovePanelSubscriber {
 	void onRight();
 	void onForward();
 	
-	void onAIStep();
+	void onAIStep(int moves);
 }

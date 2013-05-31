@@ -451,7 +451,7 @@ public class Agent {
 		Position goal = new Position(goalX, goalY);
 		
 		// Unpathable goal do not bother searching or we will cause an infinite loop.
-		if (!canMoveThrough(local_map[goalY][goalX].piece)) {
+		if (!canMoveInto(local_map[goalY][goalX].piece)) {
 			return null;
 		}
 		

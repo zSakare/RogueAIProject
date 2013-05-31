@@ -19,6 +19,10 @@ public class MovePanel extends JPanel {
 	private JButton btnForward;
 	
 	private JButton btnAI; // ai single step
+	private JButton btnAI5; // ai 5 step
+	private JButton btnAI1000; // ai 1000 step
+	
+	
 	
 	private List<IMovePanelSubscriber> subscribers;
 	
@@ -52,11 +56,27 @@ public class MovePanel extends JPanel {
 			}
 		});
 		
-		btnAI = new JButton("AI Step");
+		btnAI = new JButton("AI Step 1");
 		btnAI.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent evt) {
-				notifyAI();
+				notifyAI(1);
+			}
+		});
+		
+		btnAI5 = new JButton("AI Step 5");
+		btnAI5.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent evt) {
+				notifyAI(5);
+			}
+		});
+		
+		btnAI1000 = new JButton("AI Step 1000");
+		btnAI1000.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent evt) {
+				notifyAI(1000);
 			}
 		});
 		
@@ -71,9 +91,9 @@ public class MovePanel extends JPanel {
 		this.add(btnLeft); // 3
 		this.add(new JLabel("")); //4
 		this.add(btnRight); // 5
-		this.add(new JLabel("")); // 6
-		this.add(btnAI); // 7
-		this.add(new JLabel("")); // 8
+		this.add(btnAI); // 6
+		this.add(btnAI5); // 7
+		this.add(btnAI1000); // 8
 		
 		
 	}
@@ -96,9 +116,9 @@ public class MovePanel extends JPanel {
 		}
 	}
 	
-	private void notifyAI() {
+	private void notifyAI(int moves) {
 		for (IMovePanelSubscriber sub : subscribers) {
-			sub.onAIStep();
+			sub.onAIStep(moves);
 		}
 	}
 	

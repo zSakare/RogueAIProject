@@ -187,7 +187,7 @@ public class Agent {
 			if (canMoveInto(w.w[posy+moveVectors[direction][1]][posx+moveVectors[direction][0]])) {
 				posx += moveVectors[direction][0];
 				posy += moveVectors[direction][1];
-				handleMoveInto(w.w[posy+moveVectors[direction][1]][posx+moveVectors[direction][0]]);
+				handleMoveInto(w.w[posy][posx]);
 			}
 		} else if ((action == 'C') || (action == 'c')) { // chop down
 			int [][] moveVectors = {{1,0},{0,-1},{-1,0},{0,1}}; // {{x,y} E N W S}

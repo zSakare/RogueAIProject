@@ -4,8 +4,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.List;
 
 import logic.Agent;
+import model.Goal;
+import model.State;
 import view.IAgentView;
 
 public class AgentConsoleController implements IAgentController {
@@ -98,6 +101,93 @@ public class AgentConsoleController implements IAgentController {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	
+	public void step() {
+
+		// panel told us to take a step that the AI would...
+		// this belongs in a controller
+		Goal goal = agent.getCurrentGoal();
+		if (goal == null) { return; };
+		// Get path to POI
+		List<State> pathToPOI = goal.getPath();
+		
+		// get the first step for the AI on this path
+		if (pathToPOI.size() > 1) {
+			//State currentPos = new State(agent.w, agent., agent.getX(), agent.getY());
+			//State nextPos = goal.getPositionAfter(currentPos);
+			State nextPos = goal.getPath().get(goal.pos+1);
+			if (nextPos == null) {
+				System.err.println("Seems there is no next position...");
+			}
+			int [][] moveVectors = {{1,0},{0,-1},{-1,0},{0,1}}; // {{x,y} E N W S}
+			/*System.out.println("Current: " + currentPos + ", next: " + nextPos);
+			for (Position p : pathToPOI) {
+				System.out.println(p);
+			}*/
+			int requiredDirection = 0;
+			int direction = agent.getDirection();
+			char inFront = agent.charAt(agent.getX() + moveVectors[direction][0], agent.getY() + moveVectors[direction][1]);
+			while (nextPos.x != agent.getX() + moveVectors[requiredDirection][0] || nextPos.y != agent.getY() + moveVectors[requiredDirection][1]) {
+				requiredDirection++;
+			}
+			/* TODO: fix this shit up - a little hacky */
+			if (agent.getDirection() == requiredDirection) {
+				char action = 'x'; // x by default (fatal)
+				switch (inFront) {
+					case ' ':
+					case 'a': // axe
+					case 'k': // key
+					case 'd': // dynamite OK
+					case 'g': // gold
+					action = 'F';
+					++goal.pos;
+					break;
+					case 'T': // tree
+						if (agent.getItems('a') > 0) {
+							action = 'C'; // chop down ya
+						} else if (agent.getItems('d') > 0) {
+							action = 'B'; // blast it
+						} else {
+							action = 'x'; // error
+						}
+						break;
+					case '*': // wall
+						if (agent.getItems('d') > 0) {
+							action = 'B'; // blast it
+						} else {
+							action = 'x'; // error
+						}
+						break;
+					case '-': // door
+						if (agent.getItems('k') > 0) {
+							action = 'O'; // open
+						} else if (agent.getItems('d') > 0) {
+							action = 'B'; // blast it
+						} else {
+							action = 'x'; // error
+						}
+						break;
+					default:
+						action = 'x';
+				}
+				if (action == 'x') {
+					System.err.println("AI tried to move into something unexpected... (" + inFront + ")");
+					action = 'L';
+				}
+				onAction(action);
+			} else if (agent.getDirection() < requiredDirection && (requiredDirection - agent.getDirection()) <= 2) {
+				// if i must turn left, and it will take me at most than 2 turns to get there, turn left
+				onAction('L');
+			} else if ((agent.getDirection() - requiredDirection) <= 2){
+				onAction('R');
+			} else {
+				onAction('L');
+			}
+		} else {
+			onAction('L');
+		}
+		
 	}
 
 }

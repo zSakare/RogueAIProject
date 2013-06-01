@@ -13,4 +13,6 @@ public interface IAgentController {
 	char[][] waitForViewport();
 	
 	void onAction(char action);
+	
+	void step();
 }

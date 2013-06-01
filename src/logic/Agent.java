@@ -318,7 +318,7 @@ public class Agent {
 		for (Goal goal : goals) {
 			List<State> path = searchAStar(goal.x, goal.y, posx, posy);
 			if (path != null) {
-				System.out.println("Found path to: " + goal);
+				//System.out.println("Found path to: " + goal);
 				goal.setPath(path);
 				pathableGoals.add(goal);
 				removedGoals.add(goal);
@@ -392,13 +392,11 @@ public class Agent {
 		
 		// use breadth-first search to find the closest unexplored cell.
 		// It is always preferable to explore
-		System.out.println("Attempting to explore.");
+		//System.out.println("Attempting to explore.");
 		g = explore();
 		
-		if (g != null) {
-			System.out.println("Explore Goal: " + g);
-		} else {
-			System.out.println("Out of exploration. Trying a goal...");
+		if (g == null) {
+			//System.out.println("Out of exploration. Trying a goal...");
 			// nowhere to explore. Start planning.
 			processGoals();
 			if (!pathableGoals.isEmpty()) {
@@ -695,6 +693,9 @@ public class Agent {
 		return unpathedGoal;
 	}
 	
+	public boolean isDone() {
+		return (inventory.get('g') > 0 && posx == START_X && posy == START_Y);
+	}
 	public static void main(String[] args) {
 		Agent agent = new Agent();
 		int port;

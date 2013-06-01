@@ -24,8 +24,8 @@ public class AgentConsoleView implements IAgentView {
 	
 	@Override
 	public void onUpdate(int posx, int posy) {
-		print_view();
-		System.out.println(getExploredArea());
+		//print_view();
+		//System.out.println(getExploredArea());
 	}
 
 	@Override
@@ -137,20 +137,23 @@ public class AgentConsoleView implements IAgentView {
 			view = controller.waitForViewport();
 			if (view != null) {
 				
-				System.out.print("Enter Action(s): [f l r c o b q]");
-				action = get_action();
+				//System.out.print("Enter Action(s): [f l r c o b q]");
+				/*action = get_action();
 				
 				if (action != 'q') {
 					notifyAction(action);
-				}
+				}*/
+				//System.out.println("stepping...");
+				controller.step();
+				//System.out.println("Stepped");
 			} else {
 				System.out.println("Did not receive viewport from engine! Exiting...");
 				System.exit(1);
 			}
 		}
-		while (action != 'q');
+		while (!agent.isDone());
 		
-		System.out.println("View ended...");
+		System.out.println("Game won in " + agent.getTurnNumber() + " moves");
 	}
 	
 	char get_action() {

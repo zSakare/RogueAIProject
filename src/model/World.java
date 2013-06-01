@@ -49,9 +49,6 @@ public class World {
 			for (int x = posx - VIEW_HALF_SIZE, xx = 0; x <= posx + VIEW_HALF_SIZE; ++x, ++xx) {
 				piece = view[yy][xx];
 				w[y][x] = piece;
-				if (isInteresting(x, y)) {
-					
-				}
 			}
 		}
 		

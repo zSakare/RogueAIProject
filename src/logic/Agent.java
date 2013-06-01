@@ -244,18 +244,23 @@ public class Agent {
 			for (Goal goal : goals) {
 				List<State> path = searchAStar(goal.x, goal.y, posx, posy);
 				if (path != null) {
-					System.out.println("Found path.");
+					System.out.println("Found path to: " + goal);
 					goal.setPath(path);
 					pathableGoals.add(goal);
 					goals.remove(goal);
-				} else {
-					System.out.println("Cannot find path to " + goal);
 				}
 			}
 		}
 		
 		if (!pathableGoals.isEmpty()) {
 			currentGoal = pathableGoals.poll();
+		}
+		
+		// If we have gold, find the path to the start.
+		if (inventory.get('g') > 0) {
+			Goal immediateGoal = createNewGoal(START_X, START_Y);
+			immediateGoal.setPath(searchAStar(START_X, START_Y, posx, posy));
+			currentGoal = immediateGoal;
 		}
 		
 		// if we reached the goal, or no goal, find a new goal
@@ -440,9 +445,9 @@ public class Agent {
 				// Save the current state, finish the loop.
 				return pathFind(current);
 			}
-			System.out.println("Exploring " + current);
+			//System.out.println("Exploring " + current);
 			for (State s : explored) {
-				System.out.println("   Explored: " + s);
+				//System.out.println("   Explored: " + s);
 			}
 			
 			// Remove the element from the queue and add it to our explored set.
@@ -471,7 +476,7 @@ public class Agent {
 						neighbour.cost = potentialCost;
 						neighbour.fcost = neighbour.cost(goal);
 						if (!queue.contains(neighbour)) {
-							System.out.println(current + " -> +" + neighbour);
+							//System.out.println(current + " -> +" + neighbour);
 							queue.add(neighbour);
 						}
 					}

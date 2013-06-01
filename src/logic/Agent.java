@@ -396,9 +396,11 @@ public class Agent {
 			head = open.poll();
 			
 			System.out.println("explore " + head);
-			if (w.w[head.y][head.x] == 'x') {
-				Goal result = new Goal(head.predecessor.x, head.predecessor.y, ' ', 20);
-				result.setPath(pathFind(head.predecessor));
+			//if (w.w[head.y][head.x] == 'x') {
+			if (hasNeighboursUnexplored(head.x, head.y)) {
+				System.out.println(" -> decided " + head);
+				Goal result = new Goal(head.x, head.y, ' ', 20);
+				result.setPath(pathFind(head));
 				return result;
 			} else {
 				List<State> neighbours = head.getAllNeighbours();
@@ -579,10 +581,26 @@ public class Agent {
 	 * @param y
 	 * @return
 	 */
-	private boolean hasNeighboursUnexplored(int x, int y) {
+	public boolean hasNeighboursUnexplored(int x, int y) {
 		// check left, right, up then down (with array bound checking)
-		return (x > 0 && w.w[y][x-1] == 'x') || (x < LOCAL_MAP_SIZE-1 && w.w[y][x+1] == 'x') || 
-				(y > 0 && w.w[y-1][x] == 'x') || (y < LOCAL_MAP_SIZE-1 && w.w[y+1][x] == 'x');
+		if ((x > 0 && w.w[y][x-1] == 'x') || (x < LOCAL_MAP_SIZE-1 && w.w[y][x+1] == 'x') || 
+				(y > 0 && w.w[y-1][x] == 'x') || (y < LOCAL_MAP_SIZE-1 && w.w[y+1][x] == 'x')) {
+			return true;
+		}
+		// slower check, within 2 cells of unexplored
+		for (int dx = -VIEW_HALF_SIZE; dx <= VIEW_HALF_SIZE; ++dx) {
+			if (w.w[y-VIEW_HALF_SIZE][x+dx] == 'x' || w.w[y+VIEW_HALF_SIZE][x+dx] == 'x') { // top and bottom
+				return true;
+			}
+		}
+		for (int dy = -VIEW_HALF_SIZE + 1; dy <= VIEW_HALF_SIZE - 1; ++dy) {
+			if (w.w[y+dy][x-VIEW_HALF_SIZE] == 'x' || w.w[y+dy][x+VIEW_HALF_SIZE] == 'x') { // left and right
+				return true;
+			}
+		}
+		
+		
+		return false;
 	}
 	
 	/**

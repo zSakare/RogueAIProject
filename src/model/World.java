@@ -22,7 +22,6 @@ public class World {
 	
 	public World() {
 		w = new char[LOCAL_MAP_SIZE][LOCAL_MAP_SIZE];
-		
 		/* Mark all cells as unexplored */
 		for (int y = 0; y < LOCAL_MAP_SIZE; ++y) {
 			for (int x = 0; x < LOCAL_MAP_SIZE; ++x) {

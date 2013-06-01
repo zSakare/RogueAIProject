@@ -231,7 +231,11 @@ public class Agent {
 		for (int y = posy - VIEW_HALF_SIZE; y <= posy + VIEW_HALF_SIZE; ++y) {
 			for (int x = posx - VIEW_HALF_SIZE; x <= posx + VIEW_HALF_SIZE; ++x) {
 				if (w.isInteresting(x, y)) {
-					goals.add(createNewGoal(x, y));
+					Goal goalToAdd = createNewGoal(x, y);
+					if (goals.contains(goalToAdd)) {
+						goals.remove(goalToAdd);
+					}
+					goals.add(goalToAdd);
 				}
 			}
 		}
@@ -245,7 +249,7 @@ public class Agent {
 					pathableGoals.add(goal);
 					goals.remove(goal);
 				} else {
-					System.out.println("Cannot find path.");
+					System.out.println("Cannot find path to " + goal);
 				}
 			}
 		}

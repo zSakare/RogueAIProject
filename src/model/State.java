@@ -46,7 +46,7 @@ public class State implements Comparable {
 		Inventory newInventory;
 		State next;
 		List<State> neighbours = new LinkedList<State>();
-		System.out.println("getNeighbours: " + this);
+		//System.out.println("getNeighbours: " + this);
 		for (int [] vector : moveVectors) {
 			nx = x + vector[0];
 			ny = y + vector[1];

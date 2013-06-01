@@ -475,7 +475,7 @@ public class Agent {
 				// Save the current state, finish the loop.
 				return pathFind(current);
 			}
-			System.out.println("Exploring " + current + " towards " + goal);
+			//System.out.println("Exploring " + current + " towards " + goal);
 			//for (State s : explored) {
 				//System.out.println("   Explored: " + s);
 			//}

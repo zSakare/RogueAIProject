@@ -7,7 +7,6 @@ package logic;
  */
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -17,7 +16,10 @@ import java.util.PriorityQueue;
 import java.util.Set;
 
 import model.Goal;
+import model.Inventory;
 import model.Position;
+import model.State;
+import model.World;
 import view.AgentConsoleView;
 import view.AgentGUIView;
 import view.IAgentView;
@@ -37,8 +39,6 @@ public class Agent {
 
 	private List<IAgentView> views; // list of all the views observing this agent
 	
-	private Position local_map[][]; // our local representation of the map
-
 	private char last_view[][]; // last view received by server
 	
 	// Size of the local map (i.e. how far the agent can explore)
@@ -52,14 +52,13 @@ public class Agent {
 	private static final int START_Y = LOCAL_MAP_SIZE / 2;
 
 	private int posx, posy; // x, y position
-	private int initx, inity; // initial x, y (to return here)
-	private int minx, miny, maxx, maxy; // maximally explored area (for
-										// debugging output)
+
+	World w;
 	
 	private int turnNumber; 
 
 	// Inventory represented by map.
-	private Map<Character, Integer> inventory = new HashMap<Character, Integer>();
+	private Inventory inventory = new Inventory();
 	
 	final static int EAST = 0;
 	final static int NORTH = 1;
@@ -69,8 +68,6 @@ public class Agent {
 	// Facing direction, initially east
 	private int direction = EAST;
 
-	// next action to be given to the agent
-	private char giveAction = ' ';
 	
 	private Goal currentGoal; // current goal
 	private PriorityQueue<Goal> goals; // potential goals
@@ -78,39 +75,20 @@ public class Agent {
 	public Agent() {
 		views = new LinkedList<IAgentView>();
 		
-		local_map = new Position[LOCAL_MAP_SIZE][];
-		for (int i = 0; i < LOCAL_MAP_SIZE; ++i) {
-			local_map[i] = new Position[LOCAL_MAP_SIZE];
-		}
-
-		for (int y = 0; y < LOCAL_MAP_SIZE; ++y) {
-			for (int x = 0; x < LOCAL_MAP_SIZE; ++x) {
-				local_map[y][x] = new Position(x, y);
-				local_map[y][x].piece = 'x'; // x represents unexplored
-				// System.out.print(String.valueOf(local_map[x][y]) + " ");
-			}
-			// System.out.println();
-		}
+		w = new World();
 
 		posx = START_X;
 		posy = START_Y;
 
-		minx = maxx = posx;
-		miny = maxy = posy;		
-		initx = posx;
-		inity = posy;
+		w.minx = w.maxx = posx;
+		w.miny = w.maxy = posy;		
 		
 		turnNumber = 0;
 		
 		currentGoal = null;
 		
 		goals = new PriorityQueue<Goal>();
-		
-		// Populate inventory.
-		inventory.put('d', 0);
-		inventory.put('k', 0);
-		inventory.put('a', 0);
-		inventory.put('g', 0);
+
 	}
 	
 	// adds a view to our view list
@@ -127,22 +105,22 @@ public class Agent {
 
 	// Get our minimum explored X value
 	public int getMinX() {
-		return minx;
+		return w.minx;
 	}
 	
 	// Get our minimum explored Y value
 	public int getMinY() {
-		return miny;
+		return w.miny;
 	}
 	
 	// Get our maximum explored X value
 	public int getMaxX() {
-		return maxx;
+		return w.maxx;
 	}
 	
 	// Get our maximum explored Y value
 	public int getMaxY() {
-		return maxy;
+		return w.maxy;
 	}
 	
 	// Get our current X value
@@ -157,11 +135,11 @@ public class Agent {
 	
 	// Get the position that our agent started at (typically halfway point)
 	public int getInitX() {
-		return initx;
+		return START_X;
 	}
 	
 	public int getInitY() {
-		return inity;
+		return START_Y;
 	}
 	
 	// Get the direction (0 = EAST, increasing counterclockwise) our agent is facing
@@ -175,7 +153,7 @@ public class Agent {
 	}
 	// Get the character at the given position
 	public char charAt(int x, int y) {
-		return local_map[y][x].piece;
+		return w.w[y][x];
 	}
 	
 	public int getTurnNumber() {
@@ -206,15 +184,15 @@ public class Agent {
 			direction = (direction + 3) % 4;
 		} else if ((action == 'F') || (action == 'f')) {
 			int [][] moveVectors = {{1,0},{0,-1},{-1,0},{0,1}}; // {{x,y} E N W S}
-			if (canMoveInto(local_map[posy+moveVectors[direction][1]][posx+moveVectors[direction][0]].piece)) {
+			if (canMoveInto(w.w[posy+moveVectors[direction][1]][posx+moveVectors[direction][0]])) {
 				posx += moveVectors[direction][0];
 				posy += moveVectors[direction][1];
-				handleMoveInto(local_map[posy+moveVectors[direction][1]][posx+moveVectors[direction][0]].piece);
+				handleMoveInto(w.w[posy+moveVectors[direction][1]][posx+moveVectors[direction][0]]);
 			}
 		} else if ((action == 'C') || (action == 'c')) { // chop down
 			int [][] moveVectors = {{1,0},{0,-1},{-1,0},{0,1}}; // {{x,y} E N W S}
-			if (getItems('a') > 0 && local_map[posy+moveVectors[direction][1]][posx+moveVectors[direction][0]].piece == 'T') {
-				local_map[posy+moveVectors[direction][1]][posx+moveVectors[direction][0]].piece = ' ';
+			if (getItems('a') > 0 && w.w[posy+moveVectors[direction][1]][posx+moveVectors[direction][0]] == 'T') {
+				w.w[posy+moveVectors[direction][1]][posx+moveVectors[direction][0]] = ' ';
 			}
 		}
 	}
@@ -223,13 +201,13 @@ public class Agent {
 	private void handleMoveInto(char c) {
 		switch (c) {
 		case 'g':
-			inventory.put('g', getItems('g') + 1);
+			inventory.add('g');
 			break;
 		case 'a':
-			inventory.put('a', getItems('a') + 1);
+			inventory.add('a');
 			break;
 		case 'd':
-			inventory.put('d', getItems('d') + 1);
+			inventory.add('d');
 			break;
 			
 			default:
@@ -242,104 +220,13 @@ public class Agent {
 	 * @param view
 	 */
 	public void parse_view(char view[][]) {
-		int x, xx, y, yy;		
 		// Rotate the view so that 0 = east, 1 = north etc (i.e. back into world space)
 		view = rotate_view(view, direction);
 
-		char piece;
-		int score;
 		last_view = view;
 		
-		// Now overlay the rotated view onto the global map
-		for (y = posy - VIEW_HALF_SIZE, yy = 0; y <= posy + VIEW_HALF_SIZE; ++y, ++yy) {
-			for (x = posx - VIEW_HALF_SIZE, xx = 0; x <= posx + VIEW_HALF_SIZE; ++x, ++xx) {
-				piece = view[yy][xx];
-				local_map[y][x].piece = piece;
-			}
-		}
+		w.update(posx, posy, view);
 		
-		// Parse anything new that came in (i.e. beyond the min/max boundaries)
-		// This must be done after viewing.
-		for (y = posy - VIEW_HALF_SIZE; y <= posy + VIEW_HALF_SIZE; ++y) {
-			for (x = posx - VIEW_HALF_SIZE; x <= posx + VIEW_HALF_SIZE; ++x) {
-				if ((y > miny && y <= maxy && x >= minx && x <= maxx)
-					&& local_map[y][x].piece != ' ') {
-					score = getScore(x, y);
-					if (score <= 0) continue; // dumb to waste processing on this
-					Goal g = new Goal(x, y, local_map[y][x].piece, score);
-					if (goals.contains(g)) {
-						goals.remove(g);
-					}
-					goals.add(g);
-				}
-			}
-		}
-		
-		
-		minx = Math.max(0, Math.min(minx, posx - VIEW_HALF_SIZE));
-		maxx = Math.min(LOCAL_MAP_SIZE - 1, Math.max(maxx, posx + VIEW_HALF_SIZE + 1));
-		miny = Math.max(0, Math.min(miny, posy - VIEW_HALF_SIZE));
-		maxy = Math.min(LOCAL_MAP_SIZE - 1, Math.max(maxy, posy + VIEW_HALF_SIZE + 1));
-		
-		// process the local information as goals
-		// No goal, or already at goal - find a new goal
-		if (currentGoal == null || (posx == currentGoal.getX() && posy == currentGoal.getY())) {
-			updateGoals();
-			currentGoal = findGoal();
-		}
-	}
-	
-	/**
-	 * update all local goal scores
-	 */
-	private void updateGoals() {
-		int score;
-		PriorityQueue<Goal> newGoals = new PriorityQueue<Goal>();
-		for (Goal g : goals) {
-			score = getScore(g.getX(), g.getY());
-			g.setScore(score);
-			newGoals.add(g);
-		}
-		goals = newGoals;
-	}
-	private Goal findGoal() {
-		Goal answer = null;
-		// find exploring cell
-		PriorityQueue<Goal> explorable = new PriorityQueue<Goal>();
-
-		// Brute force search for interesting points in our window of explored area.
-		for (int y = miny; y <= maxy; y++) {
-			for (int x = minx; x <= maxx; x++) {
-				if (local_map[y][x].piece == ' ') {
-					// consider the turning penalty to prioritise moves in front of us
-					int score = getScore(x, y) - getTurningPenalty(posx, posy, direction, x, y);
-					explorable.add(new Goal(x, y, local_map[y][x].piece, score));
-				}
-			}
-		}
-		// Put in any entries from our spotted goal list that we can achieve easily
-		for (Goal g : goals) {
-			if (g.isAchievable(this)) {
-				System.out.println("Able to achieve goal " + g);
-				explorable.add(g);
-			} else {
-				System.out.println("Unable to achieve goal " + g);
-			}
-		}
-		
-		// pop down until we find a pathable explorable goal
-		while (explorable.size() > 0) {
-			Goal head = explorable.poll();
-			List<Position> path = searchAStar(head.getX(), head.getY(), posx, posy);
-			if (path != null) {
-				head.setPath(path);
-				answer = head;
-				break;
-			}
-		}
-		
-		
-		return answer;
 	}
 	
 	// rotate a view into north direction (world space) given the existing
@@ -439,31 +326,27 @@ public class Agent {
 		return (char) ch;
 	}
 
-	public List<Position> searchAStar(int goalX, int goalY, int currentX, int currentY) {
-		PriorityQueue<Position> queue = new PriorityQueue<Position>();
-		Set<Position> explored = new HashSet<Position>();
-		
-		// Remember each position's successor.
-		// no need for this, use references
-		//Map<Position, Position> cameFrom = new HashMap<Position, Position>();
+	public List<State> searchAStar(int goalX, int goalY, int currentX, int currentY) {
+		PriorityQueue<State> queue = new PriorityQueue<State>();
+		Set<State> explored = new HashSet<State>();
 		
 		// Create the goal state based on params.
-		Position goal = new Position(goalX, goalY);
+		State goal = new State(w, inventory, goalX, goalY);
 		
 		// Unpathable goal do not bother searching or we will cause an infinite loop.
-		if (!canMoveInto(local_map[goalY][goalX].piece)) {
+		if (!w.inBounds(goalX,  goalY) || !canMoveInto(w.w[goalY][goalX])) {
 			return null;
 		}
 		
-		// Add the current position.
-		Position startPosition = new Position(currentX, currentY);
-		queue.add(startPosition);
+		// Add the current state.
+		State initial = new State(w, inventory, currentX, currentY);
+		queue.add(initial);
 		
-		startPosition.setCost(0);		
-		startPosition.setFcost( startPosition.absoluteDistanceFrom(goal));
+		initial.cost = 0;		
+		initial.fcost = initial.absoluteDistanceFrom(goal);
 		
-		HashSet<Position> seen = new HashSet<Position>();
-		Position current = null;
+		HashSet<State> seen = new HashSet<State>();
+		State current = null;
 		
 		// A star!
 		while (!queue.isEmpty()) {
@@ -473,33 +356,38 @@ public class Agent {
 				// Save the current state, finish the loop.
 				return pathFind(current);
 			}
+			System.out.println("Exploring " + current);
+			for (State s : explored) {
+				System.out.println("   Explored: " + s);
+			}
 			
 			// Remove the element from the queue and add it to our explored set.
 			explored.add(current);
 			
 			// Get all possible next moves.
-			List<Position> neighbours = getLegalNeighbours(current);
+			List<State> neighbours = current.getNeighbours();
 
 			// Iterate through all next possible moves, find new, unexplored moves to explore.
 			if (neighbours != null) {
-				for (Position neighbour : neighbours) {
-					int potentialCost = current.getCost() + neighbour.absoluteDistanceFrom(current);
+				for (State neighbour : neighbours) {
+					int potentialCost = current.cost + neighbour.absoluteDistanceFrom(current);
 					if (!seen.contains(neighbour)) { // if (neighbour has no cost) !neighbour.getCost()) {
 						seen.add(neighbour);
-						neighbour.setCost(potentialCost);
+						neighbour.cost = potentialCost;
 					}
 					if (explored.contains(neighbour)) {
-						if (potentialCost >= neighbour.getCost()) {
+						if (potentialCost >= neighbour.cost) {
 							// ignore the neighbour since we've already explored it from another path
 							// and the new path to the neighbour isn't any better.
 						}
-					} else if (!queue.contains(neighbour) || potentialCost < neighbour.getCost()) {
+					} else if (!queue.contains(neighbour) || potentialCost < neighbour.cost) {
 						// Map where we came from (to pathfind).
-						neighbour.setParent(current);
+						neighbour.predecessor = current;
 						// Update costs.
-						neighbour.setCost(potentialCost);
-						neighbour.setFcost(neighbour.absoluteDistanceFrom(goal));
+						neighbour.cost = potentialCost;
+						neighbour.fcost = neighbour.absoluteDistanceFrom(goal);
 						if (!queue.contains(neighbour)) {
+							System.out.println(current + " -> +" + neighbour);
 							queue.add(neighbour);
 						}
 					}
@@ -512,29 +400,6 @@ public class Agent {
 	}
 	
 	static final int [][] moveVectors = {{1,0},{0,-1},{-1,0},{0,1}}; // {{x,y} E N W S}
-	
-	/**
-	 * Helper function to return a list of legal positions to move into.
-	 * 
-	 * @param current - current position to check from.
-	 * @return - list of legal positions
-	 */
-	private List<Position> getLegalNeighbours(Position current) {
-		// List of legal positions.
-		List<Position> legalPositions = new ArrayList<Position>();
-		
-		// Checking we do not go out of bounds or into walls.
-		for (int [] vector : moveVectors) {
-			int nx = current.getX() + vector[0];
-			int ny = current.getY() + vector[1];
-			if (nx >= 0 && nx < LOCAL_MAP_SIZE && ny >= 0 && ny < LOCAL_MAP_SIZE
-					&& canMoveInto(local_map[ny][nx].piece)) {
-				legalPositions.add(local_map[ny][nx]);
-			}
-		}
-		
-		return legalPositions;
-	}
 
 	/**
 	 * Helper function that iteratively finds the path taken by the nodes.
@@ -542,12 +407,12 @@ public class Agent {
 	 * @param current - current position to back track
 	 * @return - the path taken to reach goal.
 	 */
-	private List<Position> pathFind(Position current) {
-		LinkedList<Position> path = new LinkedList<Position>();
-		Position p = current;
+	private List<State> pathFind(State current) {
+		LinkedList<State> path = new LinkedList<State>();
+		State p = current;
 		while (p != null) {
 			path.addFirst(p);
-			p = p.getParent();
+			p = p.predecessor;
 		}
 		return path;
 	}
@@ -562,7 +427,7 @@ public class Agent {
 			// We have gold, add interest to returning to starting position.
 			return 100;
 		} else {
-			char atPosition = local_map[y][x].piece;
+			char atPosition = w.w[y][x];
 			switch (atPosition) {
 			case 'T':
 				// If we have a tree, it's more interesting if we have an axe.
@@ -627,8 +492,8 @@ public class Agent {
 	 */
 	private boolean hasNeighboursUnexplored(int x, int y) {
 		// check left, right, up then down (with array bound checking)
-		return (x > 0 && local_map[y][x-1].piece == 'x') || (x < LOCAL_MAP_SIZE-1 && local_map[y][x+1].piece == 'x') || 
-				(y > 0 && local_map[y-1][x].piece == 'x') || (y < LOCAL_MAP_SIZE-1 && local_map[y+1][x].piece == 'x');
+		return (x > 0 && w.w[y][x-1] == 'x') || (x < LOCAL_MAP_SIZE-1 && w.w[y][x+1] == 'x') || 
+				(y > 0 && w.w[y-1][x] == 'x') || (y < LOCAL_MAP_SIZE-1 && w.w[y+1][x] == 'x');
 	}
 	
 	/**
@@ -746,5 +611,16 @@ public class Agent {
 			char [][] expected = {{'a','b','c'},{'d','e','f'},{'g','h','i'}};
 			assert(res.equals(expected));
 		}
+		
+		
+		Inventory v = new Inventory();
+		assert(v.get('d') == 0);
+		assert(v.get('x') == 0);
+		v.add('d');
+		assert(v.get('d') == 1);
+		v.add('d');
+		assert(v.get('d') == 2);
+		Inventory v2 = new Inventory(v);
+		assert(v2.get('d') == 2);
 	}
 }

@@ -10,6 +10,7 @@ import javax.swing.JPanel;
 import logic.Agent;
 import model.Goal;
 import model.Position;
+import model.State;
 
 /**
  * Displays the worldmap (local map knowlegde) for a given agent
@@ -118,27 +119,28 @@ public class WorldMap extends JPanel {
 	 * Called when a piece is moused over
 	 * @param piece
 	 */
+	@SuppressWarnings("unused")
 	public void onMouseOver(WorldPiece piece) {
+		// DISABLED
 		/* clear the existing path tags */
 		for (WorldPiece pc : pathPieces) {
 			pc.setTagged(null);
 		}
 		pathPieces.clear();
 		/* get A* path */
-		List<Position> pathPositions = agent.searchAStar(piece.x, piece.y, agent.getX(), agent.getY());
+		List<State> pathPositions = agent.searchAStar(piece.x, piece.y, agent.getX(), agent.getY());
 		if (pathPositions == null) {
 			return;
 		}
 		/* tag all the pieces on the path to the goal */
-		for (Position p : pathPositions) {
-			/* tag the piece */
-			WorldPiece pc = pieces[p.getY()][p.getX()];
+		for (State p : pathPositions) {
+			// tag the piece 
+			WorldPiece pc = pieces[p.y][p.x];
 			if (pc != null) {
 				pc.setTagged(Color.GREEN);
 				pathPieces.add(pc);
 			}
 		}
-		
 	}
 	
 	public static final char [] arrows = {'>','^','<','v'};

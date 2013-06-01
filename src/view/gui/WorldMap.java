@@ -106,7 +106,11 @@ public class WorldMap extends JPanel {
 				} else {
 					piece.myType = chr;
 				}
-				piece.u = 0; // unused agent.w.u[yy][xx];
+				if (agent.hasNeighboursUnexplored(xx, yy)) {
+					piece.u = 1;
+				} else {
+					piece.u = 0;
+				}
 				//System.out.print(piece.myType);
 				piece.update();
 			}

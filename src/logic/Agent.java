@@ -16,6 +16,7 @@ import java.util.Set;
 
 import model.Goal;
 import model.Inventory;
+import model.Position;
 import model.State;
 import model.World;
 import view.AgentConsoleView;
@@ -56,7 +57,7 @@ public class Agent {
 	private int turnNumber; 
 
 	// Inventory represented by map.
-	private Inventory inventory = new Inventory();
+	public Inventory inventory = new Inventory();
 	
 	final static int EAST = 0;
 	final static int NORTH = 1;
@@ -189,11 +190,13 @@ public class Agent {
 				posy += moveVectors[direction][1];
 				handleMoveInto(w.w[posy][posx]);
 			}
-		} else if ((action == 'C') || (action == 'c')) { // chop down
+		} else if ((action == 'C') || (action == 'c')) { // chop down NOTE: if chops, will always think it's clear in front
 			int [][] moveVectors = {{1,0},{0,-1},{-1,0},{0,1}}; // {{x,y} E N W S}
-			if (getItems('a') > 0 && w.w[posy+moveVectors[direction][1]][posx+moveVectors[direction][0]] == 'T') {
-				w.w[posy+moveVectors[direction][1]][posx+moveVectors[direction][0]] = ' ';
-			}
+			w.w[posy+moveVectors[direction][1]][posx+moveVectors[direction][0]] = ' ';
+		} else if ((action == 'B') || (action == 'b')) { // blast NOTE: if blast, will always think it's clear in front
+			int [][] moveVectors = {{1,0},{0,-1},{-1,0},{0,1}}; // {{x,y} E N W S}
+			w.w[posy+moveVectors[direction][1]][posx+moveVectors[direction][0]] = ' ';
+			inventory.use('d'); // use dynamite
 		}
 	}
 	
@@ -208,6 +211,9 @@ public class Agent {
 			break;
 		case 'd':
 			inventory.add('d');
+			break;
+		case 'k':
+			inventory.add('k');
 			break;
 			
 			default:
@@ -230,7 +236,7 @@ public class Agent {
 		// update new goals if we can find a more interesting one based on the new information.
 		for (int y = posy - VIEW_HALF_SIZE; y <= posy + VIEW_HALF_SIZE; ++y) {
 			for (int x = posx - VIEW_HALF_SIZE; x <= posx + VIEW_HALF_SIZE; ++x) {
-				if (w.isInteresting(x, y)) {
+				if (w.isInteresting(w.w[y][x])) {
 					Goal goalToAdd = createNewGoal(x, y);
 					if (goals.contains(goalToAdd)) {
 						goals.remove(goalToAdd);
@@ -240,21 +246,14 @@ public class Agent {
 			}
 		}
 		
-		if (!goals.isEmpty()) {
-			for (Goal goal : goals) {
-				List<State> path = searchAStar(goal.x, goal.y, posx, posy);
-				if (path != null) {
-					System.out.println("Found path to: " + goal);
-					goal.setPath(path);
-					pathableGoals.add(goal);
-					goals.remove(goal);
-				}
-			}
-		}
+		// only perform A* pulse every 10 moves
+		/*if (turnNumber % 10 == 0 && !goals.isEmpty()) {
+			processGoals();
+		}*/
 		
-		if (!pathableGoals.isEmpty()) {
+		/*if (!pathableGoals.isEmpty()) {
 			currentGoal = pathableGoals.poll();
-		}
+		}*/
 		
 		// If we have gold, find the path to the start.
 		if (inventory.get('g') > 0) {
@@ -267,6 +266,8 @@ public class Agent {
 		if (currentGoal == null || (posx == currentGoal.x && posy == currentGoal.y)) {
 			currentGoal = findGoal();
 		}
+		
+		this.turnNumber ++;
 	}
 	
 	// rotate a view into north direction (world space) given the existing
@@ -309,6 +310,25 @@ public class Agent {
 		return view_temp;
 	}
 
+	/** look at all the unpathable goals, and see if we can path to them.
+	 * if so, put them in the pathable goal list
+	 */
+	private void processGoals() {
+		List<Goal> removedGoals = new LinkedList<Goal>();
+		for (Goal goal : goals) {
+			List<State> path = searchAStar(goal.x, goal.y, posx, posy);
+			if (path != null) {
+				System.out.println("Found path to: " + goal);
+				goal.setPath(path);
+				pathableGoals.add(goal);
+				removedGoals.add(goal);
+			}
+		}
+		for (Goal g : removedGoals) {
+			goals.remove(g);
+		}
+	}
+	
 	public Goal getCurrentGoal() {
 		return currentGoal;
 	}
@@ -375,7 +395,14 @@ public class Agent {
 		g = explore();
 		
 		if (g != null) {
-			System.out.println("Goal: " + g);
+			System.out.println("Explore Goal: " + g);
+		} else {
+			System.out.println("Out of exploration. Trying a goal...");
+			// nowhere to explore. Start planning.
+			processGoals();
+			if (!pathableGoals.isEmpty()) {
+				g = pathableGoals.poll();
+			}
 		}
 		return g;
 	}
@@ -395,17 +422,17 @@ public class Agent {
 			
 			head = open.poll();
 			
-			System.out.println("explore " + head);
+			//System.out.println("explore " + head);
 			//if (w.w[head.y][head.x] == 'x') {
-			if (hasNeighboursUnexplored(head.x, head.y)) {
-				System.out.println(" -> decided " + head);
+			if (hasNeighboursUnexplored(head.x, head.y) || w.isInteresting(w.w[head.y][head.x])) {
+				//System.out.println(" -> decided " + head);
 				Goal result = new Goal(head.x, head.y, ' ', 20);
 				result.setPath(pathFind(head));
 				return result;
 			} else {
-				List<State> neighbours = head.getAllNeighbours();
+				List<State> neighbours = head.getNeighbours(false); // don't wanna use items
 				for (State neighbour : neighbours) {
-					System.out.println("Neighbour of " + head + ": " + neighbour);
+					//System.out.println("Neighbour of " + head + ": " + neighbour);
 					if (!explored.contains(neighbour)) {
 						neighbour.predecessor = head;
 						explored.add(neighbour);
@@ -422,7 +449,7 @@ public class Agent {
 		Set<State> explored = new HashSet<State>();
 		
 		// Create the goal state based on params.
-		State goal = new State(w, inventory, goalX, goalY);
+		State goal = new State(w, null, goalX, goalY);
 		
 		// Unpathable goal do not bother searching or we will cause an infinite loop.
 		if (!w.inBounds(goalX,  goalY) || !canMoveInto(w.w[goalY][goalX])) {
@@ -438,25 +465,25 @@ public class Agent {
 		
 		HashSet<State> seen = new HashSet<State>();
 		State current = null;
-		
 		// A star!
 		while (!queue.isEmpty()) {
 			// Take the top element
 			current = queue.poll();
-			if (current.equals(goal)) {
+			//if (current.equals(goal)) {
+			if (current.x == goal.x && current.y == goal.y) {
 				// Save the current state, finish the loop.
 				return pathFind(current);
 			}
-			//System.out.println("Exploring " + current);
-			for (State s : explored) {
+			System.out.println("Exploring " + current + " towards " + goal);
+			//for (State s : explored) {
 				//System.out.println("   Explored: " + s);
-			}
+			//}
 			
 			// Remove the element from the queue and add it to our explored set.
 			explored.add(current);
 			
 			// Get all possible next moves.
-			List<State> neighbours = current.getNeighbours();
+			List<State> neighbours = current.getNeighbours(true); // wanna use items
 
 			// Iterate through all next possible moves, find new, unexplored moves to explore.
 			if (neighbours != null) {
@@ -741,5 +768,20 @@ public class Agent {
 		assert(v.get('d') == 2);
 		Inventory v2 = new Inventory(v);
 		assert(v2.get('d') == 2);
+		
+		// hashset hashcode equals testing
+		Position p1, p2, p3;
+		p1 = new Position(5, 5);
+		p2 = new Position(5, 5);
+		p3 = new Position(5, 6);
+		assert(p1.hashCode() == p2.hashCode());
+		assert(p1.equals(p2));
+		assert(p2.equals(p1));
+		assert(p2.hashCode() != p3.hashCode());
+		assert(!p2.equals(p3));
+		assert(!p3.equals(p2));
+		
+		
+		
 	}
 }

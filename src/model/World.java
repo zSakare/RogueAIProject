@@ -58,21 +58,21 @@ public class World {
 		
 	}
 
-	public boolean isInteresting(int nx, int ny) {
-		boolean isInteresting = false;
-		
-		switch (w[ny][nx]) {
+	/**
+	 * returns whether a certain character is an item (interesting) or not
+	 * @param c
+	 * @return
+	 */
+	public boolean isInteresting(char c) {
+
+		switch (c) {
 			case 'a':
 			case 'd':
 			case 'g':
 			case 'k':
-				isInteresting = true;
-				break;
+				return true;
 			default:
-				isInteresting = false;
-				break;
+				return false;
 		}
-		
-		return isInteresting;
 	}
 }

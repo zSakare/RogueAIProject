@@ -83,7 +83,31 @@ public class WorldMap extends JPanel {
 				pieces[agentPOI.getY()][agentPOI.getX()].setTagged(Color.ORANGE);
 				lastPOI = agentPOI;
 			}
+			
+			for (WorldPiece pc : pathPieces) {
+				pc.setTagged(null);
+			}
+			pathPieces.clear();
+			
+			/* get A* path */
+			List<State> pathPositions = agentPOI.getPath();
+			if (pathPositions == null) {
+				return;
+			}
+			/* tag all the pieces on the path to the goal */
+			for (State p : pathPositions) {
+				// tag the piece 
+				WorldPiece pc = pieces[p.y][p.x];
+				if (pc != null) {
+					pc.setTagged(Color.BLUE);
+					pathPieces.add(pc);
+				}
+			}
 		}
+		
+
+		
+
 		//System.out.println("Update: " + minx + "," + miny + " to " + maxx + "," + maxy);
 		for (yy = miny; yy <= maxy; ++yy) {
 			for (xx = minx; xx <= maxx; ++xx) {
@@ -127,23 +151,26 @@ public class WorldMap extends JPanel {
 	@SuppressWarnings("unused")
 	public void onMouseOver(WorldPiece piece) {
 		// DISABLED
-		/* clear the existing path tags */
-		for (WorldPiece pc : pathPieces) {
-			pc.setTagged(null);
-		}
-		pathPieces.clear();
-		/* get A* path */
-		List<State> pathPositions = agent.searchAStar(piece.x, piece.y, agent.getX(), agent.getY());
-		if (pathPositions == null) {
-			return;
-		}
-		/* tag all the pieces on the path to the goal */
-		for (State p : pathPositions) {
-			// tag the piece 
-			WorldPiece pc = pieces[p.y][p.x];
-			if (pc != null) {
-				pc.setTagged(Color.GREEN);
-				pathPieces.add(pc);
+
+		if (false) {
+			/* clear the existing path tags */
+			for (WorldPiece pc : pathPieces) {
+				pc.setTagged(null);
+			}
+			pathPieces.clear();
+			/* get A* path */
+			List<State> pathPositions = agent.searchAStar(piece.x, piece.y, agent.getX(), agent.getY());
+			if (pathPositions == null) {
+				return;
+			}
+			/* tag all the pieces on the path to the goal */
+			for (State p : pathPositions) {
+				// tag the piece 
+				WorldPiece pc = pieces[p.y][p.x];
+				if (pc != null) {
+					pc.setTagged(Color.GREEN);
+					pathPieces.add(pc);
+				}
 			}
 		}
 	}

@@ -11,6 +11,7 @@ public class Goal implements Comparable<Goal> {
 	public int y;
 	public char type;
 	private List<State> path;
+	public int pos; // position in path on state
 	private int requiredDynamite; // dynamite required to complete this path
 	private int score;
 	
@@ -21,6 +22,7 @@ public class Goal implements Comparable<Goal> {
 		this.path = new LinkedList<State>();
 		this.requiredDynamite = 0;
 		this.score = score;
+		this.pos = 0;
 	}
 	
 	/**
@@ -78,6 +80,7 @@ public class Goal implements Comparable<Goal> {
 
 	public void setPath(List<State> path) {
 		this.path = path;
+		this.pos = 0;
 	}
 
 	public int getRequiredDynamite() {

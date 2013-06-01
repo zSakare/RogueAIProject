@@ -4,20 +4,13 @@ package model;
 /**
  * Class to represent a single point on the map.
  */
-public class Position implements Comparable<Position> {
+public class Position {
 	private int x;
 	private int y;
-	private int cost;
-	private int fcost;
-	private Position parent;
-	public char piece;
 	
 	public Position(int x, int y) {
 		this.setX(x);
 		this.setY(y);
-		setCost(0);
-		setFcost(0);
-		this.piece = ' ';
 	}
 
 	
@@ -37,14 +30,6 @@ public class Position implements Comparable<Position> {
 		this.y = y;
 	}
 
-	public Position getParent() {
-		return parent;
-	}
-	
-	public void setParent(Position parent) {
-		this.parent = parent;
-	}
-	
 	public int[] getCoords() {
 		int[] coords = new int[2];
 		coords[0] = x;
@@ -53,32 +38,7 @@ public class Position implements Comparable<Position> {
 		return coords;
 	}
 
-	
-	/**
-	 * Gets how interesting the position is.
-	 * 
-	 * @return - how interesting the object is. Based on distance and reward.
-	 */
-	/*public Integer getInterest() {
-		return (int) getAbsoluteDistance() - getReward();
-	}*/
-	
-	/**
-	 * Comparison function for priority queue.
-	 * 
-	 * @param o - position object.
-	 * @return - return the comparison.
-	 */
-	public int compareTo(Position o) {
-		if (o != null) {
-			Position position = (Position) o;
-			return Integer.compare(this.fcost, position.fcost);
-			//return this.getCost().compareTo(position.getCost());
-		}
 		
-		return 0;
-	}
-	
 	@Override
 	public String toString() { 
 		return "[" + x + "," + y + "]";
@@ -111,19 +71,4 @@ public class Position implements Comparable<Position> {
 		return x + 160 * y;
 	}
 
-	public Integer getCost() {
-		return cost;
-	}
-
-	public void setCost(int cost) {
-		this.cost = cost;
-	}
-
-	public int getFcost() {
-		return fcost;
-	}
-
-	public void setFcost(int fcost) {
-		this.fcost = fcost;
-	}
 }

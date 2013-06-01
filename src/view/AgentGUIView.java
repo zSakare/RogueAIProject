@@ -221,9 +221,12 @@ public class AgentGUIView implements IAgentView, IMovePanelSubscriber, KeyListen
 		
 		// get the first step for the AI on this path
 		if (pathToPOI.size() > 1) {
-			State currentPos = new State(agent.w, null, agent.getX(), agent.getY());
-			State nextPos = goal.getPositionAfter(currentPos);
-			
+			//State currentPos = new State(agent.w, agent., agent.getX(), agent.getY());
+			//State nextPos = goal.getPositionAfter(currentPos);
+			State nextPos = goal.getPath().get(goal.pos+1);
+			if (nextPos == null) {
+				System.err.println("Seems there is no next position...");
+			}
 			int [][] moveVectors = {{1,0},{0,-1},{-1,0},{0,1}}; // {{x,y} E N W S}
 			/*System.out.println("Current: " + currentPos + ", next: " + nextPos);
 			for (Position p : pathToPOI) {
@@ -241,14 +244,35 @@ public class AgentGUIView implements IAgentView, IMovePanelSubscriber, KeyListen
 				switch (inFront) {
 					case ' ':
 					case 'a': // axe
+					case 'k': // key
+					case 'd': // dynamite OK
 					case 'g': // gold
 					action = 'F';
+					++goal.pos;
 					break;
 					case 'T': // tree
 						if (agent.getItems('a') > 0) {
 							action = 'C'; // chop down ya
+						} else if (agent.getItems('d') > 0) {
+							action = 'B'; // blast it
 						} else {
-							action = 'x';
+							action = 'x'; // error
+						}
+						break;
+					case '*': // wall
+						if (agent.getItems('d') > 0) {
+							action = 'B'; // blast it
+						} else {
+							action = 'x'; // error
+						}
+						break;
+					case '-': // door
+						if (agent.getItems('k') > 0) {
+							action = 'O'; // open
+						} else if (agent.getItems('d') > 0) {
+							action = 'B'; // blast it
+						} else {
+							action = 'x'; // error
 						}
 						break;
 					default:

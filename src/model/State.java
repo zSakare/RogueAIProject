@@ -166,7 +166,7 @@ public class State implements Comparable {
 	public int compareTo(Object o) {
 		if (o != null) {
 			State position = (State) o;
-			return Integer.compare(this.fcost, position.fcost);
+			return this.fcost - position.fcost;
 			//return this.getCost().compareTo(position.getCost());
 		}
 		

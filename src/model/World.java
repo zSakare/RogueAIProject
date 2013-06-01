@@ -1,5 +1,6 @@
 package model;
 
+
 /** World: the base for all States, with the knowledge of explored cells before any demolition etc is made. **/
 public class World {
 
@@ -48,6 +49,9 @@ public class World {
 			for (int x = posx - VIEW_HALF_SIZE, xx = 0; x <= posx + VIEW_HALF_SIZE; ++x, ++xx) {
 				piece = view[yy][xx];
 				w[y][x] = piece;
+				if (isInteresting(x, y)) {
+					
+				}
 			}
 		}
 		
@@ -56,5 +60,23 @@ public class World {
 		miny = Math.max(0, Math.min(miny, posy - VIEW_HALF_SIZE));
 		maxy = Math.min(LOCAL_MAP_SIZE - 1, Math.max(maxy, posy + VIEW_HALF_SIZE + 1));
 		
+	}
+
+	public boolean isInteresting(int nx, int ny) {
+		boolean isInteresting = false;
+		
+		switch (w[ny][nx]) {
+			case 'a':
+			case 'd':
+			case 'g':
+			case 'k':
+				isInteresting = true;
+				break;
+			default:
+				isInteresting = false;
+				break;
+		}
+		
+		return isInteresting;
 	}
 }

@@ -36,7 +36,7 @@ public class State implements Comparable {
 		for (int [] vector : moveVectors) {
 			nx = x + vector[0];
 			ny = y + vector[1];
-			if (base.inVisibleBounds(nx, ny) && base.w[ny][nx] == ' ') { // empty
+			if (base.inVisibleBounds(nx, ny) && base.isInteresting(nx, ny)) { // empty
 				neighbours.add(new State(base, inventory, nx, ny));
 			}
 		}
@@ -50,7 +50,9 @@ public class State implements Comparable {
 		for (int [] vector : moveVectors) {
 			nx = x + vector[0];
 			ny = y + vector[1];
-			if (base.inBounds(nx, ny) && (base.w[ny][nx] == ' ' || base.w[ny][nx] == 'x')) { // empty or unexplored
+			if (base.inBounds(nx, ny) && (base.isInteresting(nx, ny) 
+					|| base.w[ny][nx] == ' ' 
+					|| base.w[ny][nx] == 'x')) { // empty or unexplored
 				neighbours.add(new State(base, inventory, nx, ny));
 			}
 		}

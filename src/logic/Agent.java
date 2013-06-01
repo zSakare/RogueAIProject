@@ -69,6 +69,7 @@ public class Agent {
 	
 	private Goal currentGoal; // current goal
 	private PriorityQueue<Goal> goals; // potential goals
+	private PriorityQueue<Goal> pathableGoals; // goals that can be traversed
 	
 	public Agent() {
 		views = new LinkedList<IAgentView>();
@@ -86,6 +87,7 @@ public class Agent {
 		currentGoal = null;
 		
 		goals = new PriorityQueue<Goal>();
+		pathableGoals = new PriorityQueue<Goal>();
 
 	}
 	
@@ -225,6 +227,33 @@ public class Agent {
 		
 		w.update(posx, posy, view);
 		
+		// update new goals if we can find a more interesting one based on the new information.
+		for (int y = posy - VIEW_HALF_SIZE; y <= posy + VIEW_HALF_SIZE; ++y) {
+			for (int x = posx - VIEW_HALF_SIZE; x <= posx + VIEW_HALF_SIZE; ++x) {
+				if (w.isInteresting(x, y)) {
+					goals.add(createNewGoal(x, y));
+				}
+			}
+		}
+		
+		if (!goals.isEmpty()) {
+			for (Goal goal : goals) {
+				List<State> path = searchAStar(goal.x, goal.y, posx, posy);
+				if (path != null) {
+					System.out.println("Found path.");
+					goal.setPath(path);
+					pathableGoals.add(goal);
+					goals.remove(goal);
+				} else {
+					System.out.println("Cannot find path.");
+				}
+			}
+		}
+		
+		if (!pathableGoals.isEmpty()) {
+			currentGoal = pathableGoals.poll();
+		}
+		
 		// if we reached the goal, or no goal, find a new goal
 		if (currentGoal == null || (posx == currentGoal.x && posy == currentGoal.y)) {
 			currentGoal = findGoal();
@@ -359,7 +388,7 @@ public class Agent {
 			
 			System.out.println("explore " + head);
 			if (w.w[head.y][head.x] == 'x') {
-				Goal result = new Goal(head.predecessor.x, head.predecessor.y, ' ', 1000);
+				Goal result = new Goal(head.predecessor.x, head.predecessor.y, ' ', 20);
 				result.setPath(pathFind(head.predecessor));
 				return result;
 			} else {
@@ -506,7 +535,7 @@ public class Agent {
 			case '~':
 				return -100;
 			case ' ':
-				// dependong on whether this cell is next to unexplored or no
+				// depending on whether this cell is next to unexplored or not
 				// also prioritise distance (manhattan) - range of 5-20
 				if (hasNeighboursUnexplored(x, y)) {
 					return Math.max(20 - manhattan(posx, posy, x, y), 5);
@@ -599,6 +628,18 @@ public class Agent {
 		return turns;
 	}
 
+	/**
+	 * Generates a new unpathed goal based on coordinates.
+	 * @param x - x coordinate of interesting point.
+	 * @param y - y coordinate of interesting point.
+	 * @return unpathed goal.
+	 */
+	private Goal createNewGoal(int x, int y) {
+		Goal unpathedGoal = new Goal(x, y, w.w[y][x], getScore(x, y));
+		
+		return unpathedGoal;
+	}
+	
 	public static void main(String[] args) {
 		Agent agent = new Agent();
 		int port;

@@ -576,8 +576,12 @@ public class Agent {
 	 */
 	private boolean hasNeighboursUnexplored(int x, int y) {
 		// check left, right, up then down (with array bound checking)
-		return (x > 0 && w.w[y][x-1] == 'x') || (x < LOCAL_MAP_SIZE-1 && w.w[y][x+1] == 'x') || 
-				(y > 0 && w.w[y-1][x] == 'x') || (y < LOCAL_MAP_SIZE-1 && w.w[y+1][x] == 'x');
+		if ((x > 0 && w.w[y][x-1] == 'x') || (x < LOCAL_MAP_SIZE-1 && w.w[y][x+1] == 'x') || 
+				(y > 0 && w.w[y-1][x] == 'x') || (y < LOCAL_MAP_SIZE-1 && w.w[y+1][x] == 'x')) {
+			return true;
+		}
+		
+		return false;
 	}
 	
 	/**

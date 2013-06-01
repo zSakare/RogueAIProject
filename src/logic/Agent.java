@@ -727,6 +727,27 @@ public class Agent {
 		controller.shutdown();
 	}
 	
+	public static String printMatrix(char [][] matrix) {
+		String res = "";
+		for (int y = 0; y < matrix.length; ++y) {
+			for (int x = 0; x < matrix[0].length; ++x) {
+				res += matrix[y][x] + " ";
+			}
+			res += "\n";
+		}
+		return res;
+	}
+	
+	public static boolean matrixEquals(char [][] m1, char [][] m2) {
+		for (int y = 0; y < m1.length; ++y) {
+			for (int x = 0; x < m1[0].length; ++x) {
+				if (m1[y][x] != m2[y][x]) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
 	public static void testAgent() {
 		// test rotate view
 		{
@@ -734,28 +755,35 @@ public class Agent {
 			char [][] map = {{'c', 'f', 'i'}, {'b', 'e', 'h'}, {'a', 'd', 'g'}};
 			char [][] res = agent.rotate_view(map, EAST);
 			char [][] expected = {{'a','b','c'},{'d','e','f'},{'g','h','i'}};
-			assert(res.equals(expected));
+			System.out.println("map:\n" + printMatrix(map));
+			System.out.println("res:\n" + printMatrix(res));
+			System.out.println("expected:\n" + printMatrix(expected));
+			
+			assert(matrixEquals(res, expected));
 		}
 		{
 			Agent agent = new Agent();
 			char [][] map = {{'g', 'd', 'a'}, {'h', 'e', 'b'}, {'i', 'f', 'c'}};
 			char [][] res = agent.rotate_view(map, WEST);
 			char [][] expected = {{'a','b','c'},{'d','e','f'},{'g','h','i'}};
-			assert(res.equals(expected));
+			
+			assert(matrixEquals(res, expected));
 		}
 		{
 			Agent agent = new Agent();
 			char [][] map = {{'i', 'h', 'g'}, {'f', 'e', 'd'}, {'c', 'b', 'a'}};
 			char [][] res = agent.rotate_view(map, SOUTH);
 			char [][] expected = {{'a','b','c'},{'d','e','f'},{'g','h','i'}};
-			assert(res.equals(expected));
+			
+			assert(matrixEquals(res, expected));
 		}
 		{
 			Agent agent = new Agent();
 			char [][] map = {{'a', 'b', 'c'}, {'d', 'e', 'f'}, {'g', 'h', 'i'}};
 			char [][] res = agent.rotate_view(map, NORTH);
 			char [][] expected = {{'a','b','c'},{'d','e','f'},{'g','h','i'}};
-			assert(res.equals(expected));
+			
+			assert(matrixEquals(res, expected));
 		}
 		
 		

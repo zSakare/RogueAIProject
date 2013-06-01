@@ -19,12 +19,12 @@ public class State implements Comparable {
 	
 	public State(World base, Inventory inventory, int x, int y) {
 		this.base = base;
-		this.inventory = new Inventory(inventory);
+		this.inventory = inventory != null ? new Inventory(inventory) : null;
 		this.x = x;
 		this.y = y;
 	}
 	
-	public int absoluteDistanceFrom(State from) {
+	public int cost(State from) {
 		return (int) Math.sqrt(Math.pow(this.x - from.x, 2) + Math.pow(this.y - from.y, 2));
 	}
 	
@@ -36,13 +36,26 @@ public class State implements Comparable {
 		for (int [] vector : moveVectors) {
 			nx = x + vector[0];
 			ny = y + vector[1];
-			if (base.inBounds(nx, ny) && base.w[ny][nx] == ' ') { // empty
+			if (base.inVisibleBounds(nx, ny) && base.w[ny][nx] == ' ') { // empty
 				neighbours.add(new State(base, inventory, nx, ny));
 			}
 		}
 		return neighbours;
 	}
 	
+	/** same as above but also searches unexplored **/
+	public List<State> getAllNeighbours() {
+		int nx, ny;
+		List<State> neighbours = new LinkedList<State>();
+		for (int [] vector : moveVectors) {
+			nx = x + vector[0];
+			ny = y + vector[1];
+			if (base.inBounds(nx, ny) && (base.w[ny][nx] == ' ' || base.w[ny][nx] == 'x')) { // empty or unexplored
+				neighbours.add(new State(base, inventory, nx, ny));
+			}
+		}
+		return neighbours;
+	}
 	@Override
 	public int hashCode() {
 		return x + World.LOCAL_MAP_SIZE * y;

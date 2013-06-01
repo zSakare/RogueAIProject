@@ -7,17 +7,15 @@ package logic;
  */
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.PriorityQueue;
+import java.util.Queue;
 import java.util.Set;
 
 import model.Goal;
 import model.Inventory;
-import model.Position;
 import model.State;
 import model.World;
 import view.AgentConsoleView;
@@ -53,7 +51,7 @@ public class Agent {
 
 	private int posx, posy; // x, y position
 
-	World w;
+	public World w;
 	
 	private int turnNumber; 
 
@@ -227,6 +225,10 @@ public class Agent {
 		
 		w.update(posx, posy, view);
 		
+		// if we reached the goal, or no goal, find a new goal
+		if (currentGoal == null || (posx == currentGoal.x && posy == currentGoal.y)) {
+			currentGoal = findGoal();
+		}
 	}
 	
 	// rotate a view into north direction (world space) given the existing
@@ -326,6 +328,55 @@ public class Agent {
 		return (char) ch;
 	}
 
+	/** find a goal. May return null, in which case.... TODO **/
+	public Goal findGoal() {
+		Goal g = null;
+		
+		// use breadth-first search to find the closest unexplored cell.
+		// It is always preferable to explore
+		g = explore();
+		
+		if (g != null) {
+			System.out.println("Goal: " + g);
+		}
+		return g;
+	}
+	
+	/**
+	 * Uses breadth-first search to find the closest unexplored cell.
+	 * @return
+	 */
+	public Goal explore() {
+		State g = null;
+		State s = new State(w, inventory, posx, posy), head;
+		Queue<State> open = new LinkedList<State>();
+		HashSet<State> explored = new HashSet<State>();
+		open.add(s);
+		explored.add(s);
+		while (open.isEmpty() == false) {
+			
+			head = open.poll();
+			
+			System.out.println("explore " + head);
+			if (w.w[head.y][head.x] == 'x') {
+				Goal result = new Goal(head.predecessor.x, head.predecessor.y, ' ', 1000);
+				result.setPath(pathFind(head.predecessor));
+				return result;
+			} else {
+				List<State> neighbours = head.getAllNeighbours();
+				for (State neighbour : neighbours) {
+					System.out.println("Neighbour of " + head + ": " + neighbour);
+					if (!explored.contains(neighbour)) {
+						neighbour.predecessor = head;
+						explored.add(neighbour);
+						open.add(neighbour);
+					}
+				}
+			}
+		}
+		
+		return null;
+	}
 	public List<State> searchAStar(int goalX, int goalY, int currentX, int currentY) {
 		PriorityQueue<State> queue = new PriorityQueue<State>();
 		Set<State> explored = new HashSet<State>();
@@ -343,7 +394,7 @@ public class Agent {
 		queue.add(initial);
 		
 		initial.cost = 0;		
-		initial.fcost = initial.absoluteDistanceFrom(goal);
+		initial.fcost = initial.cost(goal);
 		
 		HashSet<State> seen = new HashSet<State>();
 		State current = null;
@@ -370,7 +421,7 @@ public class Agent {
 			// Iterate through all next possible moves, find new, unexplored moves to explore.
 			if (neighbours != null) {
 				for (State neighbour : neighbours) {
-					int potentialCost = current.cost + neighbour.absoluteDistanceFrom(current);
+					int potentialCost = current.cost + neighbour.cost(current);
 					if (!seen.contains(neighbour)) { // if (neighbour has no cost) !neighbour.getCost()) {
 						seen.add(neighbour);
 						neighbour.cost = potentialCost;
@@ -385,7 +436,7 @@ public class Agent {
 						neighbour.predecessor = current;
 						// Update costs.
 						neighbour.cost = potentialCost;
-						neighbour.fcost = neighbour.absoluteDistanceFrom(goal);
+						neighbour.fcost = neighbour.cost(goal);
 						if (!queue.contains(neighbour)) {
 							System.out.println(current + " -> +" + neighbour);
 							queue.add(neighbour);

@@ -30,9 +30,14 @@ public class World {
 		}
 	}
 	
-	public boolean inBounds (int x, int y) {
+	public boolean inVisibleBounds (int x, int y) {
 		return (x >= minx && x <= maxx && y >= miny && y <= maxy);
 	}
+	
+	public boolean inBounds (int x, int y) {
+		return (x >= 0 && x < LOCAL_MAP_SIZE && y >= 0 && y < LOCAL_MAP_SIZE);
+	}
+	
 	/**
 	 * Update the world with the VIEW_SIZE*VIEW_SIZE view centered around the given coordinates.
 	 * Ensure the view is rotated appropriately!

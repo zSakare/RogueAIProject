@@ -11,6 +11,7 @@ import java.awt.event.KeyListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.List;
+import java.util.Timer;
 import java.util.TimerTask;
 
 import javax.swing.JButton;
@@ -18,11 +19,11 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
-import java.util.Timer;
 
 import logic.Agent;
 import model.Goal;
 import model.Position;
+import model.State;
 import view.gui.IMovePanelSubscriber;
 import view.gui.MovePanel;
 import view.gui.TurnIndicator;
@@ -216,12 +217,12 @@ public class AgentGUIView implements IAgentView, IMovePanelSubscriber, KeyListen
 		Goal goal = agent.getCurrentGoal();
 		if (goal == null) { return; };
 		// Get path to POI
-		List<Position> pathToPOI = goal.getPath();
+		List<State> pathToPOI = goal.getPath();
 		
 		// get the first step for the AI on this path
 		if (pathToPOI.size() > 1) {
-			Position currentPos = new Position(agent.getX(), agent.getY());
-			Position nextPos = goal.getPositionAfter(currentPos);
+			State currentPos = new State(agent.w, null, agent.getX(), agent.getY());
+			State nextPos = goal.getPositionAfter(currentPos);
 			
 			int [][] moveVectors = {{1,0},{0,-1},{-1,0},{0,1}}; // {{x,y} E N W S}
 			/*System.out.println("Current: " + currentPos + ", next: " + nextPos);
@@ -231,7 +232,7 @@ public class AgentGUIView implements IAgentView, IMovePanelSubscriber, KeyListen
 			int requiredDirection = 0;
 			int direction = agent.getDirection();
 			char inFront = agent.charAt(agent.getX() + moveVectors[direction][0], agent.getY() + moveVectors[direction][1]);
-			while (nextPos.getX() != agent.getX() + moveVectors[requiredDirection][0] || nextPos.getY() != agent.getY() + moveVectors[requiredDirection][1]) {
+			while (nextPos.x != agent.getX() + moveVectors[requiredDirection][0] || nextPos.y != agent.getY() + moveVectors[requiredDirection][1]) {
 				requiredDirection++;
 			}
 			/* TODO: fix this shit up - a little hacky */

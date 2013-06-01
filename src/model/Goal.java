@@ -7,10 +7,10 @@ import logic.Agent;
 
 public class Goal implements Comparable<Goal> {
 	
-	private int x;
-	private int y;
-	private char type;
-	private List<Position> path;
+	public int x;
+	public int y;
+	public char type;
+	private List<State> path;
 	private int requiredDynamite; // dynamite required to complete this path
 	private int score;
 	
@@ -18,7 +18,7 @@ public class Goal implements Comparable<Goal> {
 		this.x = x;
 		this.y = y;
 		this.type = type;
-		this.path = new LinkedList<Position>();
+		this.path = new LinkedList<State>();
 		this.requiredDynamite = 0;
 		this.score = score;
 	}
@@ -72,11 +72,11 @@ public class Goal implements Comparable<Goal> {
 		this.type = type;
 	}
 
-	public List<Position> getPath() {
+	public List<State> getPath() {
 		return path;
 	}
 
-	public void setPath(List<Position> path) {
+	public void setPath(List<State> path) {
 		this.path = path;
 	}
 
@@ -101,7 +101,7 @@ public class Goal implements Comparable<Goal> {
 	 * @param p
 	 * @return next position
 	 */
-	public Position getPositionAfter(Position p) {
+	public State getPositionAfter(State p) {
 		int index = path.indexOf(p);
 		if (index == -1 || index == path.size() - 1) {
 			return null;

@@ -392,6 +392,7 @@ public class Agent {
 		
 		// use breadth-first search to find the closest unexplored cell.
 		// It is always preferable to explore
+		System.out.println("Attempting to explore.");
 		g = explore();
 		
 		if (g != null) {
@@ -755,9 +756,6 @@ public class Agent {
 			char [][] map = {{'c', 'f', 'i'}, {'b', 'e', 'h'}, {'a', 'd', 'g'}};
 			char [][] res = agent.rotate_view(map, EAST);
 			char [][] expected = {{'a','b','c'},{'d','e','f'},{'g','h','i'}};
-			System.out.println("map:\n" + printMatrix(map));
-			System.out.println("res:\n" + printMatrix(res));
-			System.out.println("expected:\n" + printMatrix(expected));
 			
 			assert(matrixEquals(res, expected));
 		}
@@ -809,6 +807,35 @@ public class Agent {
 		assert(!p2.equals(p3));
 		assert(!p3.equals(p2));
 		
+		Inventory i1, i2;
+		i1 = new Inventory();
+		i2 = new Inventory();
+		i1.add('b');
+		i2.add('b');
+		assert(i1.equals(i2));
+		assert(i2.equals(i1));
+		assert(i1.hashCode() == i2.hashCode());
+		i1.add('c');
+		assert(!i1.equals(i2));
+		assert(!i2.equals(i1));
+		assert(i1.hashCode() != i2.hashCode());
+		
+		State s1, s2;
+		Inventory is1, is2;
+		is1 = new Inventory();
+		is1.add('b');
+		is1.add('c');
+		is2 = new Inventory(is1);
+		s1 = new State(null, is1, 100, 100);
+		s2 = new State(null, is2, 100, 100);
+		assert (s1.equals(s2));
+		assert (s2.equals(s1));
+		assert (s1.hashCode() == s2.hashCode());
+		
+		s1.inventory.add('d');
+		assert (!s1.equals(s2));
+		assert (!s2.equals(s1));
+		assert (s1.hashCode() != s2.hashCode());
 		
 		
 	}

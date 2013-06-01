@@ -69,6 +69,8 @@ public class State implements Comparable {
 							if (!useItems) continue; // don't wanna use items, don't try dynamite
 							newInventory = new Inventory(inventory); // create a copy
 							newInventory.use('d'); // use a dynamite
+							// also mark the given cell as broken
+							next.breakCell(nx, ny);
 						}
 						break;
 					case '-': // key
@@ -76,16 +78,19 @@ public class State implements Comparable {
 							if (!useItems) continue; // don't wanna use items, don't try dynamite
 							newInventory = new Inventory(inventory); // create a copy
 							newInventory.use('d'); // use a dynamite
+							// also mark the given cell as broken
+							next.breakCell(nx, ny);
 						}
 						break;
 					case '*': // wall
 						if (!useItems) continue; // don't wanna use items, don't try dynamite
 						newInventory = new Inventory(inventory); // create a copy
 						newInventory.use('d'); // use a dynamite
+						// also mark the given cell as broken
+						next.breakCell(nx, ny);
 						break;
 					}
-					// also mark the given cell as broken
-					next.breakCell(nx, ny);
+					
 				} else {
 					newInventory = inventory; // just use the existing inventory
 				}

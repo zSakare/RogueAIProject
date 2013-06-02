@@ -3,22 +3,23 @@
 set -e
 
 server() {
-  (cd ../bin/logic && java Rogue -i ../$1 -p 1337 | grep -i moves)
+  (cd ../src && (java logic.Rogue -i ../test/$1 -p 30000) | grep -i moves)
 }
 
 player() {
-  ./agent -p 1337 > /dev/null
+  (cd ../src && java logic.Agent -p 30000 > /dev/null)
 }
 
 echo Compiling teh javas
-(cd server && javac ../bin/logic/Rogue.java)
+(cd ../src/logic && javac Rogue.java -classpath ../)
+(cd ../src/logic && javac Agent.java -classpath ../)
 
 for TEST in inputs/*.in; do
   echo Running $( basename "$TEST" )
 
-  #server "$TEST" &
-  #sleep 0.2
-  #player || true
+  server "$TEST" &
+  sleep 0.2
+  player || true
 
-  #wait
+  wait
 done

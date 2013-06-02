@@ -47,6 +47,7 @@ public class World {
 		for (int y = posy - VIEW_HALF_SIZE, yy = 0; y <= posy + VIEW_HALF_SIZE; ++y, ++yy) {
 			for (int x = posx - VIEW_HALF_SIZE, xx = 0; x <= posx + VIEW_HALF_SIZE; ++x, ++xx) {
 				piece = view[yy][xx];
+				if (piece == 0) piece = ' '; // null piece is empty
 				w[y][x] = piece;
 			}
 		}

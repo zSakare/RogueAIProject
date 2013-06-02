@@ -33,7 +33,9 @@ public class Agent {
 	
 	// Size of the local map (i.e. how far the agent can explore)
 	public static final int LOCAL_MAP_SIZE = 160;
-
+	
+	public static int MAX_MOVES = 10000;
+	
 	// Width and height of view we get from server
 	public static final int VIEW_SIZE = 5; 
 	public static final int VIEW_HALF_SIZE = 2; 
@@ -315,7 +317,7 @@ public class Agent {
 				removedGoals.add(goal);
 				continue;
 			}
-			// only goal is gold
+			// only goal is gold - experimental (i.e. don't use A* to find dynamite and stuff, because A* does this)
 			if (w.w[goal.y][goal.x] != 'g') {
 				continue;
 			}
@@ -394,7 +396,7 @@ public class Agent {
 			//System.out.println("Out of exploration. Trying a goal...");
 			// nowhere to explore. Start planning.
 			processGoals();
-			while (!pathableGoals.isEmpty()) {
+			if (!pathableGoals.isEmpty()) {
 				g = pathableGoals.poll();
 				System.out.println("Took the pathablegoal " + g + " (" + System.identityHashCode(g) + ")");
 				//for (State p : g.getPath()) {
@@ -456,6 +458,8 @@ public class Agent {
 		
 		// Add the current state.
 		State initial = new State(w, inventory, currentX, currentY);
+		initial.move = turnNumber; // prevents infinite branching terminate at 10000 moves
+		
 		queue.add(initial);
 		
 		initial.cost = 0;		
@@ -464,12 +468,18 @@ public class Agent {
 		HashSet<State> seen = new HashSet<State>();
 		State current = null;
 		// A star!
+		//System.out.println("search A* is working towards " + goal);
 		while (!queue.isEmpty()) {
+			
 			// Take the top element
 			current = queue.poll();
+			//System.out.print(".");
+			//System.out.println(current);
+			//System.out.println(current.getMap());
 			//if (current.equals(goal)) {
 			if (current.x == goal.x && current.y == goal.y) {
 				// Save the current state, finish the loop.
+				//System.out.println("Search A* finished, explored " + explored.size() + " states.");
 				return pathFind(current);
 			}
 			//System.out.println("Exploring " + current + " towards " + goal);
@@ -510,7 +520,8 @@ public class Agent {
 				}
 			}
 		}
-		
+		//System.out.println();
+		//System.out.println("Search A* failed, explored " + explored.size() + " states, result: ");
 		// We haven't found a viable path to take.
 		return null;
 	}

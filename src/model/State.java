@@ -4,9 +4,13 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
+import logic.Agent;
+
 /** Refers to a compact world state, used for plan A* branching **/
 public class State implements Comparable {
 
+	
+	
 	public World base; // world base - our understanding of the world so far
 	public Inventory inventory; // inventory for this state
 	
@@ -15,6 +19,7 @@ public class State implements Comparable {
 	public State predecessor;
 	
 	public int cost, fcost;
+	public int move;
 	
 	public HashSet<Position> destroyed; // destroyed cells in this state
 	
@@ -46,6 +51,12 @@ public class State implements Comparable {
 		Inventory newInventory;
 		State next;
 		List<State> neighbours = new LinkedList<State>();
+		
+		if (move == Agent.MAX_MOVES) { // no more branching...
+			System.err.println("BRANCH NO MORE!!!!");
+			return neighbours;
+		}
+		
 		//System.out.println("getNeighbours: " + this);
 		for (int [] vector : moveVectors) {
 			nx = x + vector[0];
@@ -55,6 +66,7 @@ public class State implements Comparable {
 			isBreakable = breakable(c);
 			if (base.inVisibleBounds(nx, ny) && (c == ' ' || isInteresting || isBreakable)) { // empty or walkable cell
 				next = new State(base, inventory, nx, ny);
+				next.move = move+1;
 				next.destroyed = new HashSet<Position>(destroyed);
 				if (isInteresting) { // we walked onto an item
 					newInventory = new Inventory(inventory); // create a copy
@@ -173,6 +185,32 @@ public class State implements Comparable {
 		return 0;
 	}
 	
+	public String getMap() {
+		String res = "";
+		// draw top border
+		for (int xx = base.minx; xx < base.maxx + 2; ++xx) {
+			res += '%';
+		}
+		res += '\n';
+		for (int yy = base.miny; yy < base.maxy; ++yy) {
+			res += '%';
+			for (int xx = base.minx; xx < base.maxx; ++xx) {
+				if (xx == x && yy == y) {
+					res += '#';
+				} else if (xx == World.START_X && yy == World.START_Y) {
+					res += 'S';
+				} else {
+					res += cell(xx,yy);
+				}
+			}
+			res += "%\n";
+		}
+		// draw bottom border
+		for (int xx = base.minx; xx < base.maxx + 2; ++xx) {
+			res += '%';
+		}
+		return res;
+	}
 	@Override
 	public String toString() { 
 		return "[" + x + "," + y + "] " + (inventory != null ? inventory.toString() : "null") + " [" + destroyed.size() + "]";

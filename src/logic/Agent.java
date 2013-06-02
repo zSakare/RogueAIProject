@@ -4,6 +4,21 @@ package logic;
 /*  Sample Agent for Text-Based Adventure Game
 /*  COMP3411 Artificial Intelligence
 /*  UNSW Session 1, 2013
+ * 
+ * Algorithms, Data structures & Operation:
+ * Our agent initially explores the entire pathable space using Breadth First Search
+ * across the field. The pathable space is defined by all cells that can be moved into
+ * by the agent including paths createable by non-consumable items. Once the agent is no 
+ * longer able to explore anymore it will attempt to build a plan to reach the gold and 
+ * then to the starting position. To build a plan, we use an A* algorithm, searching 
+ * across game states to determine which items we need along the way and when to use them.
+ * Our A* has low memory overhead as our states only store the difference between the 
+ * current state and the initial state as opposed to a recursive list of states from
+ * starting to the current state.
+ * 
+ * Our agent's map is stored as a 2D char array and is constructed as a new view is read in
+ * from the Rogue server. Initially the agent assumes fog of war on every cell except its
+ * beginning 5x5 view and more is added as it explores.
  */
 
 import java.io.IOException;

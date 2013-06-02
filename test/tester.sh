@@ -7,7 +7,7 @@ server() {
 }
 
 player() {
-  (cd ../src && java logic.Agent -p 30000 > /dev/null)
+  (cd ../src && time (java logic.Agent -p 30000 > /dev/null))
 }
 
 echo Compiling teh javas
@@ -19,7 +19,7 @@ for TEST in ../*.in; do
 
   server "$TEST" &
   sleep 0.2
-  player || true
+  player
 
   wait
 done

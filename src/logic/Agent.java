@@ -315,6 +315,10 @@ public class Agent {
 				removedGoals.add(goal);
 				continue;
 			}
+			// only goal is gold
+			if (w.w[goal.y][goal.x] != 'g') {
+				continue;
+			}
 			List<State> path = searchAStar(goal.x, goal.y, posx, posy);
 			if (path != null) {
 				//System.out.println("Found path to: " + goal + " (" + System.identityHashCode(goal) + ")");

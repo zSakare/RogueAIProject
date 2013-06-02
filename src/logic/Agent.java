@@ -229,7 +229,9 @@ public class Agent {
 			for (int x = posx - VIEW_HALF_SIZE; x <= posx + VIEW_HALF_SIZE; ++x) {
 				if (w.isInteresting(w.w[y][x])) {
 					Goal goalToAdd = createNewGoal(x, y);
+					//System.out.println("Spotted new goal " + goalToAdd);
 					if (goals.contains(goalToAdd)) {
+						//System.out.println("overwrote existing goal");
 						goals.remove(goalToAdd);
 					}
 					goals.add(goalToAdd);
@@ -307,10 +309,20 @@ public class Agent {
 	private void processGoals() {
 		List<Goal> removedGoals = new LinkedList<Goal>();
 		for (Goal goal : goals) {
+			//System.out.println("Goal head: " + goal);
+			// check to see if the goal still needs to be calculated (i.e. we might have picked it up already)
+			if (w.w[goal.y][goal.x] != goal.type) {
+				removedGoals.add(goal);
+				continue;
+			}
 			List<State> path = searchAStar(goal.x, goal.y, posx, posy);
 			if (path != null) {
-				//System.out.println("Found path to: " + goal);
+				//System.out.println("Found path to: " + goal + " (" + System.identityHashCode(goal) + ")");
+				//for (State s : path) {
+				//	System.out.println(" " + s);
+				//}
 				goal.setPath(path);
+
 				pathableGoals.add(goal);
 				removedGoals.add(goal);
 			}
@@ -378,8 +390,12 @@ public class Agent {
 			//System.out.println("Out of exploration. Trying a goal...");
 			// nowhere to explore. Start planning.
 			processGoals();
-			if (!pathableGoals.isEmpty()) {
+			while (!pathableGoals.isEmpty()) {
 				g = pathableGoals.poll();
+				System.out.println("Took the pathablegoal " + g + " (" + System.identityHashCode(g) + ")");
+				//for (State p : g.getPath()) {
+				//	System.out.println(p);
+				//}
 			}
 		}
 		return g;

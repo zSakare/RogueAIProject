@@ -14,7 +14,7 @@ echo Compiling teh javas
 (cd ../src/logic && javac Rogue.java -classpath ../)
 (cd ../src/logic && javac Agent.java -classpath ../)
 
-for TEST in inputs/*.in; do
+for TEST in ../*.in; do
   echo Running $( basename "$TEST" )
 
   server "$TEST" &

@@ -111,7 +111,10 @@ public class AgentConsoleController implements IAgentController {
 		if (goal == null) { return; };
 		// Get path to POI
 		List<State> pathToPOI = goal.getPath();
-		
+		//System.out.println("Step path:");
+		//for (State p : pathToPOI) {
+		//	System.out.println(p);
+		//}
 		// get the first step for the AI on this path
 		if (pathToPOI.size() > 1) {
 			//State currentPos = new State(agent.w, agent., agent.getX(), agent.getY());
@@ -119,6 +122,7 @@ public class AgentConsoleController implements IAgentController {
 			State nextPos = goal.getPath().get(goal.pos+1);
 			if (nextPos == null) {
 				System.err.println("Seems there is no next position...");
+				return;
 			}
 			int [][] moveVectors = {{1,0},{0,-1},{-1,0},{0,1}}; // {{x,y} E N W S}
 			/*System.out.println("Current: " + currentPos + ", next: " + nextPos);

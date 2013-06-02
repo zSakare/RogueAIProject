@@ -22,7 +22,7 @@ package logic;
  * 
  * Initially our agent performed an A* search to path to any point on the map. We decided
  * to switch to a BFS exploration algorithm as not only is this faster than A*, for exploration
- * purposes, BFS fits better. It does a brute force run of the map whereas A* requires a goal
+ * purposes, BFS fits better. It does a brute force search of the map whereas A* requires a goal
  * to be decided prior to the search. As a result our final program performs BFS until it
  * is no longer able to explore and switches over to A* once it has all the information it
  * needs.

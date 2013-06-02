@@ -12,16 +12,17 @@ public class State implements Comparable {
 	
 	
 	public World base; // world base - our understanding of the world so far
-	public Inventory inventory; // inventory for this state
+	public Inventory inventory; // participates in hashcode,equals inventory for this state
 	
-	public int x, y;
+	public int x, y; /** participates in hashcode/equals */
 	
 	public State predecessor;
+	public int fromDirection; // direction we came from
 	
 	public int cost, fcost;
-	public int move;
+	public int move; // move counter
 	
-	public HashSet<Position> destroyed; // destroyed cells in this state
+	public HashSet<Position> destroyed; // participates in hashcode/equalsdestroyed cells in this state
 	
 	private static final int [][] moveVectors = {{1,0},{0,-1},{-1,0},{0,1}}; // {{x,y} E N W S}
 	
@@ -41,7 +42,8 @@ public class State implements Comparable {
 	/**
 	 * Gets all the neighbours for this state.
 	 * Parameter determines whether we want to use consumables (namely dynamite) to get somewhere.
-	 * @param useItems
+	 * @param useItems whether we are allowed to use dynamite while searching
+	 * @param direction initial direction (to make bfs faster basically by queuing straight moves first)
 	 * @return
 	 */
 	public List<State> getNeighbours(boolean useItems) {
@@ -59,6 +61,9 @@ public class State implements Comparable {
 		
 		//System.out.println("getNeighbours: " + this);
 		for (int [] vector : moveVectors) {
+		//for (int i = fromDirection, ii = 0; ii < moveVectors.length; i = (i + 1) % moveVectors.length, ++ii) {
+			//nx = x + moveVectors[i][0];
+			//ny = y + moveVectors[i][1];
 			nx = x + vector[0];
 			ny = y + vector[1];
 			c = cell(nx, ny);
@@ -67,6 +72,7 @@ public class State implements Comparable {
 			if (base.inVisibleBounds(nx, ny) && (c == ' ' || isInteresting || isBreakable)) { // empty or walkable cell
 				next = new State(base, inventory, nx, ny);
 				next.move = move+1;
+				//next.fromDirection = i;
 				next.destroyed = new HashSet<Position>(destroyed);
 				if (isInteresting) { // we walked onto an item
 					newInventory = new Inventory(inventory); // create a copy

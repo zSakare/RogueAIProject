@@ -430,6 +430,7 @@ public class Agent {
 				result.setPath(pathFind(head));
 				return result;
 			} else {
+				head.fromDirection = direction;
 				List<State> neighbours = head.getNeighbours(false); // don't wanna use items
 				for (State neighbour : neighbours) {
 					//System.out.println("Neighbour of " + head + ": " + neighbour);

@@ -23,7 +23,7 @@ public class MovePanel extends JPanel {
 	
 	private JButton btnAI; // ai single step
 	private JButton btnAI5; // ai 5 step
-	private JButton btnAI1000; // ai 1000 step
+	private JButton btnAI2000; // ai 1000 step
 	
 	
 	
@@ -75,11 +75,11 @@ public class MovePanel extends JPanel {
 			}
 		});
 		
-		btnAI1000 = new JButton("AI Step 1000");
-		btnAI1000.addActionListener(new ActionListener() {
+		btnAI2000 = new JButton("AI Step 2000");
+		btnAI2000.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent evt) {
-				notifyAI(1000);
+				notifyAI(2000);
 			}
 		});
 		
@@ -96,7 +96,7 @@ public class MovePanel extends JPanel {
 		this.add(btnRight); // 5
 		this.add(btnAI); // 6
 		this.add(btnAI5); // 7
-		this.add(btnAI1000); // 8
+		this.add(btnAI2000); // 8
 		
 		
 	}

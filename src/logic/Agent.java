@@ -19,6 +19,13 @@ package logic;
  * Our agent's map is stored as a 2D char array and is constructed as a new view is read in
  * from the Rogue server. Initially the agent assumes fog of war on every cell except its
  * beginning 5x5 view and more is added as it explores.
+ * 
+ * Initially our agent performed an A* search to path to any point on the map. We decided
+ * to switch to a BFS exploration algorithm as not only is this faster than A*, for exploration
+ * purposes, BFS fits better. It does a brute force run of the map whereas A* requires a goal
+ * to be decided prior to the search. As a result our final program performs BFS until it
+ * is no longer able to explore and switches over to A* once it has all the information it
+ * needs.
  */
 
 import java.io.IOException;

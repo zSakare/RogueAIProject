@@ -1,12 +1,9 @@
 package view;
 
-import java.io.*;
-import java.net.Socket;
-import java.util.List;
+import java.io.IOException;
 
-import java.util.*;
-import controller.IAgentController;
 import logic.Agent;
+import controller.IAgentController;
 
 public class AgentConsoleView implements IAgentView {
 

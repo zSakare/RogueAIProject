@@ -25,15 +25,6 @@ import view.IAgentView;
 import controller.AgentConsoleController;
 import controller.IAgentController;
 
-// TODO: Immediate Goal
-/* 1. Cache a point of interest (path) when one is found.
- * 2. If a greater reward is found after more of the map is revealed, replace current path.
- */
-// TODO: Later Goals:
-/* 1. Consider how to build a plan (not just a path) to reach a location.
- * 2. E.g. if a tree is blocking path, how to break open tree to get to gold.
- * 3. Has to consider possible waste of items (blowing up random walls or trees).
- */
 public class Agent {
 
 	private List<IAgentView> views; // list of all the views observing this agent
@@ -339,18 +330,6 @@ public class Agent {
 	}
 
 	public char get_action(char view[][]) {
-		/* Add later, commented out for gui view.
-		// Find interesting point (scan map) and put into PriQ.
-		/*Position goal = findPOI();
-		
-		// Perform a search and pick best next move.
-		List<Position> path = searchAStar(goal.getX(), goal.getY(), posx, posy);
-		
-		// TODO: Remove debug prints later.
-		for (Position step : path) {
-			System.out.println("Move: (" + step.getCurrX() + "," + step.getCurrY() + ").");
-		}
-		*/
 		// REPLACE THIS CODE WITH AI TO CHOOSE ACTION
 		
 		

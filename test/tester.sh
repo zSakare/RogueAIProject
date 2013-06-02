@@ -19,7 +19,7 @@ for TEST in ../*.in; do
 
   server "$TEST" &
   sleep 0.2
-  player || true
+  time (player || true) | grep -i user
 
   wait
 done

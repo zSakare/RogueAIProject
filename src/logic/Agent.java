@@ -84,8 +84,9 @@ public class Agent {
 
 	
 	private Goal currentGoal; // current goal
-	private PriorityQueue<Goal> goals; // potential goals
-	private PriorityQueue<Goal> pathableGoals; // goals that can be traversed
+	//private PriorityQueue<Goal> goals; // potential goals
+	//private PriorityQueue<Goal> pathableGoals; // goals that can be traversed
+	private Goal gold; // gold goal
 	
 	public Agent() {
 		views = new LinkedList<IAgentView>();
@@ -102,9 +103,9 @@ public class Agent {
 		
 		currentGoal = null;
 		
-		goals = new PriorityQueue<Goal>();
-		pathableGoals = new PriorityQueue<Goal>();
-
+		//goals = new PriorityQueue<Goal>();
+		//pathableGoals = new PriorityQueue<Goal>();
+		gold = null; // not found
 	}
 	
 	// adds a view to our view list
@@ -252,13 +253,16 @@ public class Agent {
 		for (int y = posy - VIEW_HALF_SIZE; y <= posy + VIEW_HALF_SIZE; ++y) {
 			for (int x = posx - VIEW_HALF_SIZE; x <= posx + VIEW_HALF_SIZE; ++x) {
 				if (w.isInteresting(w.w[y][x])) {
-					Goal goalToAdd = createNewGoal(x, y);
+					//Goal goalToAdd = createNewGoal(x, y);
 					//System.out.println("Spotted new goal " + goalToAdd);
-					if (goals.contains(goalToAdd)) {
-						//System.out.println("overwrote existing goal");
-						goals.remove(goalToAdd);
+					if (w.w[y][x] == 'g') { // found the gold!
+						gold = createNewGoal(x, y);
 					}
-					goals.add(goalToAdd);
+					//if (goals.contains(goalToAdd)) {
+					//	//System.out.println("overwrote existing goal");
+					//	goals.remove(goalToAdd);
+					//}
+					//goals.add(goalToAdd);
 				}
 			}
 		}
@@ -327,37 +331,39 @@ public class Agent {
 		return view_temp;
 	}
 
-	/** look at all the unpathable goals, and see if we can path to them.
+	/** look for a path to the gold
 	 * if so, put them in the pathable goal list
 	 */
 	private void processGoals() {
-		List<Goal> removedGoals = new LinkedList<Goal>();
-		for (Goal goal : goals) {
-			//System.out.println("Goal head: " + goal);
-			// check to see if the goal still needs to be calculated (i.e. we might have picked it up already)
-			if (w.w[goal.y][goal.x] != goal.type) {
-				removedGoals.add(goal);
-				continue;
-			}
-			// only goal is gold - experimental (i.e. don't use A* to find dynamite and stuff, because A* does this)
-			if (w.w[goal.y][goal.x] != 'g') {
-				continue;
-			}
-			List<State> path = searchAStar(goal.x, goal.y, posx, posy);
-			if (path != null) {
-				//System.out.println("Found path to: " + goal + " (" + System.identityHashCode(goal) + ")");
-				//for (State s : path) {
-				//	System.out.println(" " + s);
-				//}
-				goal.setPath(path);
+		if (gold == null) return; // can't process
+		//List<Goal> removedGoals = new LinkedList<Goal>();
+		//for (Goal goal : goals) {
+		//System.out.println("Goal head: " + goal);
+		// check to see if the goal still needs to be calculated (i.e. we might have picked it up already)
+		//if (w.w[gold.y][gold.x] != goal.type) {
+		//	removedGoals.add(goal);
+		//	continue;
+		//}
+		// only goal is gold - experimental (i.e. don't use A* to find dynamite and stuff, because A* does this)
+		//if (w.w[goal.y][goal.x] != 'g') {
+		//	continue;
+		//}
+		List<State> path = searchAStar(gold.x, gold.y, posx, posy);
+		if (path != null) {
+			//System.out.println("Found path to: " + goal + " (" + System.identityHashCode(goal) + ")");
+			//for (State s : path) {
+			//	System.out.println(" " + s);
+			//}
+			//goal.setPath(path);
 
-				pathableGoals.add(goal);
-				removedGoals.add(goal);
-			}
+			//pathableGoals.add(goal);
+			gold.setPath(path);
+			//removedGoals.add(goal);
 		}
-		for (Goal g : removedGoals) {
-			goals.remove(g);
-		}
+		//}
+		//for (Goal g : removedGoals) {
+		//	goals.remove(g);
+		//}
 	}
 	
 	public Goal getCurrentGoal() {
@@ -418,9 +424,9 @@ public class Agent {
 			//System.out.println("Out of exploration. Trying a goal...");
 			// nowhere to explore. Start planning.
 			processGoals();
-			if (!pathableGoals.isEmpty()) {
-				g = pathableGoals.poll();
-				System.out.println("Took the pathablegoal " + g + " (" + System.identityHashCode(g) + ")");
+			if (gold != null && gold.getPath().size() > 0) {
+				g = gold;
+				System.out.println("Finally found path to gold " + g + " (" + System.identityHashCode(g) + ")");
 				//for (State p : g.getPath()) {
 				//	System.out.println(p);
 				//}

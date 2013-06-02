@@ -9,11 +9,10 @@ import javax.swing.JPanel;
 
 import logic.Agent;
 import model.Goal;
-import model.Position;
 import model.State;
 
 /**
- * Displays the worldmap (local map knowlegde) for a given agent
+ * Displays the worldmap (local map knowledge) for a given agent
  * @author Randal Grant
  *
  */

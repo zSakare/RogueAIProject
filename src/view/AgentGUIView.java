@@ -10,7 +10,6 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -21,9 +20,6 @@ import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
 
 import logic.Agent;
-import model.Goal;
-import model.Position;
-import model.State;
 import view.gui.IMovePanelSubscriber;
 import view.gui.MovePanel;
 import view.gui.TurnIndicator;

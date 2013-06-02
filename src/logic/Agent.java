@@ -699,7 +699,7 @@ public class Agent {
 	public static void main(String[] args) {
 		Agent agent = new Agent();
 		int port;
-		// TODO remove me
+
 		testAgent();
 
 		if (args.length < 2) {
